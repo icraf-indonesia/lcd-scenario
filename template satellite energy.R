@@ -1,12 +1,12 @@
 #set wd di laptop dw
-setwd("C:/dw/ICRAF/redcluew/syntax/redcluwe")
+setwd("C:/dw/ICRAF/redcluew/syntax/lcd-scenario")
 
 ###BEGIN: initiate all variables ####
 # username <- "alfanugraha"
 # password <- "1234"
 selectedProv = "JaBar"
 datapath <- paste0("data/", selectedProv, "/")
-datapathCSV <- paste0("raw/jabar_inredcluwe", selectedProv, "/")
+datapathCSV <- paste0("raw/jabar_in_redcluwe/")
 
 ioSector <- readRDS(paste0(datapath, "sector"))
 ioIntermediateDemand <- readRDS(paste0(datapath, "indem"))
@@ -28,20 +28,30 @@ populationProjection <- readRDS(paste0(datapath, "population"))
 baselineEmission <- readRDS(paste0(datapath, "otherEm"))
 
 # data skenario jika dalam csv atau dataset baru
-inIntermediateDemand <- paste0(datapathCSV, "/02_input_antara_skenario1.csv")
+#inIntermediateDemand <- paste0(datapathCSV, "/02_input_antara_skenario1.csv")
+inFD <- paste0(datapathCSV, "/17_final_demand_proyeksi_skenario1_a.csv")
 inEnergy<- paste0(datapathCSV, "/08_satelit_energi_skenario1.csv")
 inEmissionFactorEnergiTable<- paste0(datapathCSV, "/10_faktor_emisi_energi.csv") # asumsi faktor emisi tidak berubah
+inProporsiPDRB <- paste0(datapathCSV, "/16_proporsi_pdrb.csv")
 
-indemScen1 <- read.table(inIntermediateDemand, header=FALSE, sep=",")
+#indemScen1 <- read.table(inIntermediateDemand, header=F, sep=",")
+fdSken1a <- read.table(inFD, header=TRUE, sep=",", stringsAsFactors = F)
 energy <- read.table(inEnergy, header=TRUE, sep=",", stringsAsFactors = F)
 ef_energy <- read.table(inEmissionFactorEnergiTable, header=TRUE, sep=",", stringsAsFactors = F)
+proporsiPDRB <- read.table(inProporsiPDRB, header=TRUE, sep=",", stringsAsFactors = F)
 
 
-#BAU
-ioBau<- ioIntermediateDemand
+
+# BAU ---------------------------------------------------------------------
+ioIntermediateDemand
 energyBau <- satelliteEnergy
 efBau <- emissionFactorEnergy
 
+################################################################################
+#                                                                              #
+#                                   SHEET IO                                   #
+#                                                                              #
+################################################################################
 # perhitungan table IO
 matrixIoIntermediateDemand <- as.matrix(ioIntermediateDemand)
 matrixIoAddedValue <- as.matrix(ioAddedValue)
@@ -55,6 +65,193 @@ ioTotalOutputInverse <- 1/ioTotalOutput
 ioTotalOutputInverse[is.infinite(ioTotalOutputInverse)] <- 0
 ioTotalOutputInverse <- diag(ioTotalOutputInverse)
 
+indem_matrix <- as.matrix(ioIntermediateDemand)
+addval_matrix <- as.matrix(ioAddedValue)
+dimensi <- ncol(indem_matrix)
+
+indem_colsum <- colSums(indem_matrix)
+addval_colsum <- colSums(addval_matrix)
+fin_con <- 1/(indem_colsum+addval_colsum)
+fin_con[is.infinite(fin_con)] <- 0
+tinput_invers <- diag(fin_con)
+A <- indem_matrix %*% tinput_invers
+I <- as.matrix(diag(dimensi))
+I_A <- I-A
+leontief <- solve(I_A)
+
+matrixIoIntermediateDemand <- as.matrix(ioIntermediateDemand) 
+matrixIoAddedValue <- as.matrix(ioAddedValue) #asumsikan dulu tidak ada penambahan import, jd tdk berubah importnya
+nrowMatrixIoAddedValue <- nrow(matrixIoAddedValue)
+ioDimention <- ncol(ioIntermediateDemand) 
+
+colSumsMatrixIoIntermediateDemand <- colSums(matrixIoIntermediateDemand)
+colSumsMatrixIoAddedValue <- colSums(matrixIoAddedValue)
+ioTotalOutput <- colSumsMatrixIoIntermediateDemand + colSumsMatrixIoAddedValue # ioTotalInput 
+ioTotalOutputInverse <- 1/ioTotalOutput
+ioTotalOutputInverse[is.infinite(ioTotalOutputInverse)] <- 0
+ioTotalOutputInverse <- diag(ioTotalOutputInverse)
+
+
+
+################################################################################
+#                                                                              #
+#                       beberapa komponen SHEET ANALISIS                       #
+#                                                                              #
+################################################################################
+findem <- ioFinalDemand
+findemcom <- ioFinalDemandComponent
+colnames(findem) <- c(t(findemcom))
+findem$`Total Permintaan Akhir` <- rowSums(findem)
+fdSelectYear <- findem$`Total Permintaan Akhir`
+
+#permintaan akhir
+fdSelectYear <- findem$`Total Permintaan Akhir`
+
+#output = leontif * permintaan akhir
+outputSelectYear <- leontief %*% fdSelectYear
+
+#Total output dari tabel IO -- > yang harusnya rowsum
+matrixIoIntermediateDemand <- as.matrix(ioIntermediateDemand)
+matrixIoFinalDemand <- as.matrix(ioFinalDemand)
+
+rowSumsMatrixIoIntermediateDemand <- rowSums(matrixIoIntermediateDemand)
+rowSumsMatrixIoAddedValue <- rowSums(matrixIoFinalDemand)
+ioTotalOutputRow <- rowSumsMatrixIoIntermediateDemand + rowSumsMatrixIoAddedValue # ioTotaloutput 
+
+#cek
+cek <- outputSelectYear - ioTotalOutputRow
+
+#PDRB AWAL
+pdrbAwal <- outputSelectYear * proporsiPDRB
+
+
+
+
+################################################################################
+#                                                                              #
+#                                 SHEET ENERGI                                 #
+#                                                                              #
+################################################################################
+#tbl_sat = energyBau
+#emission_lookup = efBau
+
+energyBau
+efBau
+
+#beberapa bagian 
+#Total konsumsi energi per Row
+totalKonsumsiEnergi <- energyBau[,3]
+#Total output
+totalOutput <- ioTotalOutputRow
+## koefisien energi
+koefEnergi <- totalKonsumsiEnergi/ioTotalOutputRow
+
+
+
+## fungsi untuk sheet tabel energi --> hasil ekstrak dari satellliteimpact di apps shiny 
+satelliteImpactEnergy <- function(sat_type = "energy", tbl_sat = data.frame(), 
+                                  emission_lookup = data.frame()){ 
+  if(sat_type == "energy" | sat_type == "waste"){
+    impact <- list() # impact$cons; impact$emission
+    
+    impact$cons <- tbl_sat
+    
+    order_cname <- names(impact$cons)[4:ncol(impact$cons)]
+    em_f <- numeric()
+    for(m in 1:length(order_cname)){
+      em_f <- c(em_f, emission_lookup[which(emission_lookup[,1]==order_cname[m]), 2])
+    }
+    em_f <- diag(em_f, nrow = length(em_f), ncol = length(em_f))
+    
+    
+    #perkalian matriks
+    impact$emission <- impact$cons
+    impact$emission[,4:ncol(impact$emission)] <- as.matrix(impact$cons[,4:ncol(impact$cons)]) %*% em_f
+    impact$emission[,3] <- rowSums(impact$emission[,4: ncol(impact$emission)])
+    colnames(impact$emission)[3] <- "Temission"
+  } 
+  impact$cons[is.na(impact$cons)] <- 0
+  impact$emission[is.na(impact$emission)] <- 0
+  return(impact)
+}
+
+#BAU: baseline
+tabelEmisiEnergiBAU <- satelliteImpactEnergy('energy', tbl_sat = energyBau, emission_lookup = efBau)
+tabelEmisiEnergiBAU$emission[,3] #total tabel emisi energi BAU
+
+
+
+
+################################################################################
+#                                                                              #
+#                                SHEET PROYEKSI                                #
+#                                                                              #
+################################################################################
+
+gdpRate <- 5/100
+yearFrom <- 2016 
+yearTo <- 2030
+
+## bagian FD
+fdCalculate <- function(tbl1, tbl2){
+  for(i in 1:ncol(tbl1)){
+    if(i == 1){
+      tbl1[,i] <- tbl2[,i]*(tbl1[,i] + 1)
+    } else {
+      tbl1[,i] <- tbl1[,i-1]*(tbl1[,i] + 1)
+    }
+  }
+  return(tbl1)
+}
+lengthYear <- (yearTo - yearFrom)+1
+column_year <- paste0("y", yearFrom:yearTo )
+sector <- ioSector
+lengthSector <- nrow(sector)
+proyPertumEkonomi <- matrix(gdpRate,nrow = lengthSector,ncol = lengthYear)
+#rownames(proyPertumEkonomi) <- ioSector[,1]
+colnames(proyPertumEkonomi) <- column_year
+
+### JIKA PAKAI SKENARIO 1A --> FD pada 2015 saja yang berubah 
+fdSelectYear <- fdSken1a[,1] #ambil yang 2015 saja dr fdSken1a
+fdAllYear <- fdCalculate(tbl1 = proyPertumEkonomi,tbl2 = as.data.frame(fdSelectYear))
+
+## bagian Output
+outputAllYear <- leontief %*% fdAllYear
+
+
+## bagian PDRB
+pdrbAwal
+proporsiPDRB
+
+proyPdrb <- outputAllYear*proporsiPDRB[,1]
+colProyPdrb <- colSums(proyPdrb)
+plot(yearFrom : yearTo,colProyPdrb) #plot pdrb
+
+## proyeksi konsumsi energi
+#koefisien energi dari sheet energi
+koefEnergi
+
+#tabel konsumsi energi proyeksi
+proyKonsumsiEnergi <- outputAllYear*koefEnergi
+
+
+
+# tabel proporsi energi yang diambil dari tahun 2015
+tabelKonsumsiEnergi <-  energyBau[,-(1:3)]
+totalKonsumsiEnergi
+propEnergi <- tabelKonsumsiEnergi/totalKonsumsiEnergi
+
+
+
+################################################################################
+#                                                                              #
+#                          Alur dari mas alfa dan Tin                          #
+#                                                                              #
+################################################################################
+proyKonsumsiEnergi <- outputAllYear*koefEnergi
+
+#terbentuk 15 tabel konsumsi energi
+#proyKonsumsiEnergiTipeEnergi <- proyKonsumsiEnergi*propEnergi
 
 # Skenario 1 EBT: PLTM on grid (definisikan skenario) --------------------------------------------------------------
 # berpengaruh pada FD
@@ -112,107 +309,13 @@ efScen1 <- ef_energy
 #startT <- as.numeric(input$dateFrom)
 #endT <- as.numeric(input$dateTo)
 
-## tabel IO dari excehl redcluwe.jabar
-indem_matrix <- as.matrix(ioBau)
-addval_matrix <- as.matrix(ioAddedValue)
-dimensi <- ncol(indem_matrix)
-
-indem_colsum <- colSums(indem_matrix)
-addval_colsum <- colSums(addval_matrix)
-fin_con <- 1/(indem_colsum+addval_colsum)
-fin_con[is.infinite(fin_con)] <- 0
-tinput_invers <- diag(fin_con)
-A <- indem_matrix %*% tinput_invers
-I <- as.matrix(diag(dimensi))
-I_A <- I-A
-leontief <- solve(I_A)
-
-
-## tabel energi dari excel redcluwe.jabar
-tbl_sat = energyBau
-emission_lookup = efBau
-
-
-## fungsi untuk sheet tabel energi --> hasil ekstrak dari satellliteimpact di apps shiny 
-satelliteImpactEnergy <- function(sat_type = "energy", tbl_sat = data.frame(), 
-                            emission_lookup = data.frame()){ 
-  if(sat_type == "energy" | sat_type == "waste"){
-    impact <- list() # impact$cons; impact$emission
-    
-    impact$cons <- tbl_sat
-    
-    order_cname <- names(impact$cons)[4:ncol(impact$cons)]
-    em_f <- numeric()
-    for(m in 1:length(order_cname)){
-      em_f <- c(em_f, emission_lookup[which(emission_lookup[,1]==order_cname[m]), 2])
-    }
-    em_f <- diag(em_f, nrow = length(em_f), ncol = length(em_f))
-    
-    
-    #perkalian matriks
-    impact$emission <- impact$cons
-    impact$emission[,4:ncol(impact$emission)] <- as.matrix(impact$cons[,4:ncol(impact$cons)]) %*% em_f
-    impact$emission[,3] <- rowSums(impact$emission[,4: ncol(impact$emission)])
-    colnames(impact$emission)[3] <- "Temission"
-  } 
-  impact$cons[is.na(impact$cons)] <- 0
-  impact$emission[is.na(impact$emission)] <- 0
-  return(impact)
-}
-
-#BAU: baseline
-tabelEmisiEnergiBAU <- satelliteImpactEnergy('energy', tbl_sat = energyBau, emission_lookup = efBau)
-tabelEmisiEnergiBAU$emission[,3] #total tabel emisi energi BAU
 
 #Skenario 1
 tabelEmisiEnergiSken <- satelliteImpactEnergy('energy', tbl_sat = energyScen1, emission_lookup = efScen1)
 tabelEmisiEnergiSken$emission[,3] #total tabel emisi energi skenario 1
 
 
-# Tabel proyeksi ----------------------------------------------------------
 
-gdpRate <- 5/100
-yearFrom <- 2016 
-yearTo <- 2030
-
-## bagian FD
-fdCalculate <- function(tbl1, tbl2){
-  for(i in 1:ncol(tbl1)){
-    if(i == 1){
-      tbl1[,i] <- tbl2[,i]*(tbl1[,i] + 1)
-    } else {
-      tbl1[,i] <- tbl1[,i-1]*(tbl1[,i] + 1)
-    }
-  }
-  return(tbl1)
-}
-lengthYear <- (yearTo - yearFrom)+1
-column_year <- paste0("y", yearFrom:yearTo )
-lengthSector <- nrow(sector)
-proyPertumEkonomi <- matrix(gdpRate,nrow = lengthSector,ncol = lengthYear)
-#rownames(proyPertumEkonomi) <- ioSector[,1]
-colnames(proyPertumEkonomi) <- column_year
-
-findem <- ioFinalDemand
-findemcom <- ioFinalDemandComponent
-colnames(findem) <- c(t(findemcom))
-findem$`Total Permintaan Akhir` <- rowSums(findem)
-fdSelectYear <- findem$`Total Permintaan Akhir`
-
-fdAllYear <- fdCalculate(tbl1 = proyPertumEkonomi,tbl2 = as.data.frame(fdSelectYear))
-
-
-## bagian Output: belum selesai yang muncul masih kolom terakhir saja
-outputCalculate <- function(tbl1,tbl2){
-  for(i in 1:ncol(tbl2)){
-    tblOutput <- tbl1 %*% tbl2[,i]
-  }
-  return(tblOutput)
-}
-
-outputSelectYear <- leontief %*% fdSelectYear
-
-outputAllYear <- outputCalculate(tbl1 = leontief, tbl2 = fdAllYear)
 
 
 
