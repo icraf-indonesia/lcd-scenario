@@ -363,12 +363,12 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       colnames(F_Type) <- "F_Type"
       eval(parse(text=(paste("intFaktorEmisi_", year_1, "<- replace(infaktorEmisi$Em_F,c(9,10),infaktorEmisi$Em_F[9:10])", sep ="" ))))
       eval(parse(text=(paste("intFaktorEmisi_", year_2, "<- replace(infaktorEmisi$Em_F,c(9,10),((1+((", year_2, "-2015) * -0.03)) * infaktorEmisi$Em_F[9:10]))", sep ="" ))))
-      eval(parse(text=(paste("efInt_", year_2, "<-cbind(F_Type,intFaktorEmisi_", year_2,")", sep="" ))))
-      eval(parse(text=(paste("diagEFInt_", year_2, "<-diag(efInt_", year_2,"$intFaktorEmisi_", year_2, ", ncol = num_ef, nrow = num_ef)", sep=""))))
-      eval(parse(text=(paste("tableBuanganLimbah_",  year_2, "<-propLimbah * proyeksiBAULimbah$`", year_2, "`", sep=""))))
-      eval(parse(text=paste("tableIntEmisi_", year_2, "<- as.matrix(tableBuanganLimbah_", year_2, ") %*% diagEFInt_", year_2,sep= "" )))
-      eval(parse(text=paste("rowSumIntEmisi_", year_2, "<- rowSums(tableIntEmisi_", year_2, ")", sep="")))
-      eval(parse(text=paste("intTotalEmisi_", year_2, "<- sum(rowSumIntEmisi_", year_2, ")", sep="")))
+      eval(parse(text=(paste("efInt_", year, "<-cbind(F_Type,intFaktorEmisi_", year,")", sep="" ))))
+      eval(parse(text=(paste("diagEFInt_", year, "<-diag(efInt_", year,"$intFaktorEmisi_", year, ", ncol = num_ef, nrow = num_ef)", sep=""))))
+      eval(parse(text=(paste("tableBuanganLimbah_",  year, "<-propLimbah * proyeksiBAULimbah$`", year, "`", sep=""))))
+      eval(parse(text=paste("tableIntEmisi_", year, "<- as.matrix(tableBuanganLimbah_", year, ") %*% diagEFInt_", year,sep= "" )))
+      eval(parse(text=paste("rowSumIntEmisi_", year, "<- rowSums(tableIntEmisi_", year, ")", sep="")))
+      eval(parse(text=paste("intTotalEmisi_", year, "<- sum(rowSumIntEmisi_", year, ")", sep="")))
       intTotalEmisi_All <- rbind(intTotalEmisi_2016,
                                  intTotalEmisi_2017,
                                  intTotalEmisi_2018,
@@ -497,4 +497,134 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
         labs(x = "Tahun", y = "Emisi")+
         ggtitle("Grafik Intensitas Emisi")
       ggplotly(plotIntensitasEm_All)
+      
+      ## Bar Chart di Tahun 2030 ##
+      tblPDRB_t <- filter(tblPDRB_All, year=="2030")
+      barPDRB <- ggplot(tblPDRB_t, (aes(x=Scenario, y=Total_PDRB))) + geom_bar(stat="identity")
+      ggplotly(barPDRB)
+      
+      tblEmisi_t <- filter(tblEmisi_All, year=="2030")
+      barEmisi <- ggplot(tblEmisi_t, (aes(x=Scenario, y=Total_Emisi))) + geom_bar(stat="identity")
+      ggplotly(barEmisi)
+      
+
+      tblIntensitasEm_t <- filter(tblIntensitasEm_All, year=="2030")
+      barInEmisi <- ggplot(tblIntensitasEm_t, (aes(x=Scenario, y=Intensitas_Emisi))) + geom_bar(stat="identity")
+      ggplotly(barInEmisi)
+      
+      
+### OUTPUT DATA FRAME ####
+  ## scenario-specific dataframe of sector><simulation years depicting GDP, emission and emission intensity    
+    #Aksi 1
+      #PDRB
+      sector <- ioSector$V1
+      colnames(intPDRB_All) <- year
+      PDRB_padat <- as.data.frame(cbind(sector,intPDRB_All))
+      #Emisi
+      rowTotalEmisi <- as.data.frame(cbind(rowTotalEmisi_2016,
+                             rowTotalEmisi_2017,
+                             rowTotalEmisi_2018,
+                             rowTotalEmisi_2019,
+                             rowTotalEmisi_2020,
+                             rowTotalEmisi_2021,
+                             rowTotalEmisi_2022,
+                             rowTotalEmisi_2023,
+                             rowTotalEmisi_2024,
+                             rowTotalEmisi_2025,
+                             rowTotalEmisi_2026,
+                             rowTotalEmisi_2027,
+                             rowTotalEmisi_2028,
+                             rowTotalEmisi_2029,
+                             rowTotalEmisi_2030), row.names = 1:length(sector))
+      colnames(rowTotalEmisi) <- year      
+      Emisi_padat <- cbind(sector, rowTotalEmisi)
+      #Intensitas Emisi
+      inEm_padatTemp <- rowTotalEmisi/intPDRB_All[,2:length(intPDRB_All)]
+      inEm_padat <- cbind(sector, inEm_padatTemp)
+    
+    #Aksi 2
+      #PDRB
+      sector <- ioSector$V1
+      colnames(intPDRBCair_All) <- year
+      PDRB_cair <- as.data.frame(cbind(sector,intPDRBCair_All))
+      #Emisi
+      rowSumIntEmisi <- as.data.frame(cbind(rowSumIntEmisi_2016,
+                                            rowSumIntEmisi_2017,
+                                            rowSumIntEmisi_2018,
+                                            rowSumIntEmisi_2019,
+                                            rowSumIntEmisi_2020,
+                                            rowSumIntEmisi_2021,
+                                            rowSumIntEmisi_2022,
+                                            rowSumIntEmisi_2023,
+                                            rowSumIntEmisi_2024,
+                                            rowSumIntEmisi_2025,
+                                            rowSumIntEmisi_2026,
+                                            rowSumIntEmisi_2027,
+                                            rowSumIntEmisi_2028,
+                                            rowSumIntEmisi_2029,
+                                            rowSumIntEmisi_2030), row.names = 1:length(sector))
+      colnames(rowSumIntEmisi) <- year      
+      Emisi_cair <- cbind(sector, rowSumIntEmisi)
+      #Intensitas Emisi
+      inEm_cairTemp <- rowSumIntEmisi/intPDRBCair_All
+      inEm_cair <- cbind(sector, inEm_cairTemp)  
+  
+  ## scenario-specific dataframe of sector><simulation years depicting GDP change against BAU, emission change against BAU and emission intensity change against BAU 
+    #Aksi 1
+      deltaPDRB <- as.data.frame(cbind(sector,(intPDRB_All[,2:length(intPDRB_All)] - proyeksiPDRB)))
+      emisiBAU <- cbind(emisi_2016,
+                        emisi_2017,
+                        emisi_2018,
+                        emisi_2019,
+                        emisi_2020,
+                        emisi_2021,
+                        emisi_2022,
+                        emisi_2023,
+                        emisi_2024,
+                        emisi_2025,
+                        emisi_2026,
+                        emisi_2027,
+                        emisi_2028,
+                        emisi_2029,
+                        emisi_2030)
+      deltaEmisi <- as.data.frame(cbind(sector, (rowTotalEmisi  - emisiBAU)))
+      intensitasEmBAU <- emisiBAU/proyeksiPDRB
+      deltaInEm <- as.data.frame(cbind(sector, (inEm_padatTemp - intensitasEmBAU)))
+    
+      
+    #Aksi 2
+      deltaPDRB_cair <- as.data.frame(cbind(sector,(intPDRBCair_All - proyeksiPDRB)))
+      emisiBAU <- cbind(emisi_2016,
+                        emisi_2017,
+                        emisi_2018,
+                        emisi_2019,
+                        emisi_2020,
+                        emisi_2021,
+                        emisi_2022,
+                        emisi_2023,
+                        emisi_2024,
+                        emisi_2025,
+                        emisi_2026,
+                        emisi_2027,
+                        emisi_2028,
+                        emisi_2029,
+                        emisi_2030)
+      deltaEmisi_cair <- as.data.frame(cbind(sector, (rowSumIntEmisi  - emisiBAU)))
+      intensitasEmBAU <- emisiBAU/proyeksiPDRB
+      deltaInEm_cair <- as.data.frame(cbind(sector, (inEm_cairTemp - intensitasEmBAU)))
+      
+  ## scenario-specific dataframe at t15 depicting cumulative emission reduction, GDP change and emission intensity change
+    #Aksi 1
+      cumPDRB <- cumsum(int_totalPDRBpadat$Total_PDRB)
+      cumEmisi <- cumsum(totalEmPadatInt_All$Total_Emisi)
+      cumInEmisi <- cumsum(intensistasEmPadat$Intensitas_Emisi)
+      cumTable_padat <- as.data.frame(cbind(year, cumPDRB, cumEmisi, cumInEmisi))
+      colnames(cumTable_padat) <- c("year", "Total_PDRB", "Total_Emisi", "Intensitas_Emisi")
+      
+    #Aksi 2
+      cumPDRB_cair <- cumsum(int_totalPDRBCair$Total_PDRB)
+      cumEmisi_cair <- cumsum(totalEmCairInt_All$Total_Emisi)
+      cumInEmisi_cair <- cumsum(intensistasEmCair$Intensitas_Emisi)
+      cumTable_cair <- as.data.frame(cbind(year, cumPDRB_cair, cumEmisi_cair, cumInEmisi_cair))
+      colnames(cumTable_cair) <- c("year", "Total_PDRB", "Total_Emisi", "Intensitas_Emisi")
       
