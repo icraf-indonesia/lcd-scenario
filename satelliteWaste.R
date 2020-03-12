@@ -160,7 +160,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
   ## Tabel Proyeksi Emisi Limbah Tahun X ##
   
   #Contoh : Tabel Proyeksi Emisi Limbah Tahun 2017
-  infaktorEmisi <- read.table("raw/faktor_emisi_limbah.csv", header = TRUE, sep = ";")
+  infaktorEmisi <- read.table("raw/11_faktor_emisi_limbah.csv", header = TRUE, sep = ";")
   num_input_ef <- length(infaktorEmisi$Em_F)
   input_ef_matrix <- diag(as.vector(infaktorEmisi$Em_F), ncol = num_input_ef, nrow = num_input_ef)
   tableEmisi <- as.matrix(tableBuanganLimbah_t) %*% input_ef_matrix
@@ -212,5 +212,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
 
 
 ### SKENARIO AKSI ####  
+  
+  ## Limbah Padat : Rencana Pembangunan dan Operasional TPS Terpadu 3R/Kompos-ting ##
   
 
