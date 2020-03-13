@@ -620,6 +620,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       cumInEmisi <- cumsum(intensistasEmPadat$Intensitas_Emisi)
       cumTable_padat <- as.data.frame(cbind(year, cumPDRB, cumEmisi, cumInEmisi))
       colnames(cumTable_padat) <- c("year", "Total_PDRB", "Total_Emisi", "Intensitas_Emisi")
+      cumTable_padat_2030 <- filter(cumTable_padat, year=="2030") 
       
     #Aksi 2
       cumPDRB_cair <- cumsum(int_totalPDRBCair$Total_PDRB)
@@ -627,4 +628,5 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       cumInEmisi_cair <- cumsum(intensistasEmCair$Intensitas_Emisi)
       cumTable_cair <- as.data.frame(cbind(year, cumPDRB_cair, cumEmisi_cair, cumInEmisi_cair))
       colnames(cumTable_cair) <- c("year", "Total_PDRB", "Total_Emisi", "Intensitas_Emisi")
+      cumTable_cair_2030 <- filter(cumTable_cair, year=="2030")
       
