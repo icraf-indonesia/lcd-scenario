@@ -48,6 +48,18 @@ persenBahanBakar1 <- read.table(inPersentaseBahanBAkar1, header=F, sep=",", stri
 persenBahanBakar2 <- read.table(inPersentaseBahanBAkar2, header=F, sep=",", stringsAsFactors = F)
 persenBahanBakarSken2 <- read.table(inPersentaseBahanBAkarSken2, header=F, sep=",", stringsAsFactors = F)
 
+################################################################################
+#                                                                              #
+#                                    INPUT                                     #
+#                                                                              #
+################################################################################
+
+gdpRate <- 5/100 #user input
+yearFrom <- 2016 #user input
+yearTo <- 2030 #user input
+
+
+
 # BAU ---------------------------------------------------------------------
 ioIntermediateDemand
 energyBau <- satelliteEnergy
@@ -138,12 +150,6 @@ pdrbAwal <- outputSelectYear * proporsiPDRB
 #                                 SHEET ENERGI                                 #
 #                                                                              #
 ################################################################################
-#tbl_sat = energyBau
-#emission_lookup = efBau
-
-energyBau
-efBau
-
 #beberapa bagian 
 #Total konsumsi energi per Row
 totalKonsumsiEnergi <- energyBau[,3]
@@ -151,8 +157,6 @@ totalKonsumsiEnergi <- energyBau[,3]
 totalOutput <- ioTotalOutputRow
 ## koefisien energi
 koefEnergi <- totalKonsumsiEnergi/ioTotalOutputRow
-
-
 
 ## fungsi untuk sheet tabel energi --> hasil ekstrak dari satellliteimpact di apps shiny 
 satelliteImpactEnergy <- function(sat_type = "energy", tbl_sat = data.frame(), 
@@ -183,9 +187,7 @@ satelliteImpactEnergy <- function(sat_type = "energy", tbl_sat = data.frame(),
 
 #BAU: baseline
 tabelEmisiEnergiBAU <- satelliteImpactEnergy('energy', tbl_sat = energyBau, emission_lookup = efBau)
-tabelEmisiEnergiBAU$emission[,3] #total tabel emisi energi BAU
-
-
+#tabelEmisiEnergiBAU$emission[,3] #total tabel emisi energi BAU
 
 
 ################################################################################
@@ -193,11 +195,6 @@ tabelEmisiEnergiBAU$emission[,3] #total tabel emisi energi BAU
 #                                SHEET PROYEKSI                                #
 #                                                                              #
 ################################################################################
-
-gdpRate <- 5/100 #user input
-yearFrom <- 2016 #user input
-yearTo <- 2030 #user input
-
 ## bagian FD
 fdCalculate <- function(tbl1, tbl2){
   for(i in 1:ncol(tbl1)){
@@ -226,39 +223,21 @@ outputAllYear <- leontief %*% fdAllYear
 
 
 ## bagian PDRB
-pdrbAwal
-proporsiPDRB
-
 proyPdrb <- outputAllYear*proporsiPDRB[,1]
 colProyPdrb <- colSums(proyPdrb)
 plot(yearFrom : yearTo,colProyPdrb) #plot pdrb
 
 ## proyeksi konsumsi energi
 #koefisien energi dari sheet energi
-koefEnergi
-
 #tabel konsumsi energi proyeksi
 proyKonsumsiEnergi <- outputAllYear*koefEnergi
 
-
-
 # tabel proporsi energi yang diambil dari tahun 2015
 tabelKonsumsiEnergi <-  energyBau[,-(1:3)]
-totalKonsumsiEnergi
 propEnergi <- tabelKonsumsiEnergi/totalKonsumsiEnergi
-
-
-
-################################################################################
-#                                                                              #
-#                          Alur dari mas alfa dan Tin                          #
-#                                                                              #
-################################################################################
 proyKonsumsiEnergi <- outputAllYear*koefEnergi
 
 #terbentuk 15 tabel konsumsi energi
-#proyKonsumsiEnergiTipeEnergi <- propEnergi * proyKonsumsiEnergi[,1]
-
 proyTabelKonsEnergi<-list()
 for (i in 1:ncol(proyKonsumsiEnergi)) {
   proyTabelKonsEnergi[[i]]<-proyKonsumsiEnergi[,i]*propEnergi
@@ -273,30 +252,12 @@ for(m in 1:length(order_energi_name)){
 }
 matEfBau <- diag(matEfBau, nrow = length(matEfBau), ncol = length(matEfBau))
 
-
 # terbentuk 15 tabel proyeksi emisi
 proyEmisi <- list()
 for (i in 1:lengthYear) {
   proyEmisi[[i]]<-as.matrix(proyTabelKonsEnergi[[i]]) %*% matEfBau
 }
 names(proyEmisi)<-paste0("y",yearFrom:yearTo)
-
-#rowsum utk 2016 : 2030
-# rowsumProyEmisi<- rowSums(proyEmisi[[1]])
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[2]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[3]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[4]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[5]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[6]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[7]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[8]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[9]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[10]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[11]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[12]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[13]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[14]]))
-# rowsumProyEmisi <- cbind(rowsumProyEmisi,rowSums(proyEmisi[[15]]))
 
 for (i in 1:lengthYear) {
   if(i==1){
@@ -306,11 +267,8 @@ for (i in 1:lengthYear) {
   }
 }
 
-
 #COLSUM proyeksi energi
 colsumProyEmisi <- colSums(rowsumProyEmisi)
-plot(yearFrom : yearTo,colsumProyEmisi)
-#lines(as.vector(colsumProyEmisiSken),col="blue")
 
 ################################################################################
 #                                                                              #
@@ -343,7 +301,6 @@ plot(yearFrom : yearTo,colsumProyEmisi)
 
 # Step 3: masukkan skenario untuk perubahan FD --------------------------
 # data scenario
-fdSken1 #user input
 
 
 ################################################################################
@@ -354,10 +311,6 @@ fdSken1 #user input
 
 # Step 4: Merubah akun satelit -----------------------------------------
 
-gdpRate <- 5/100
-yearFrom <- 2016 
-yearTo <- 2030
-
 ## bagian FD
 ### JIKA PAKAI SKENARIO 1A --> file fdnya pakai yang skenario
 fdAllYear <- as.matrix(fdSken1)
@@ -367,25 +320,15 @@ persenBahanBakar2 <- as.matrix(persenBahanBakar2) #skenario 2027:2030 #user inpu
 ## bagian Output
 outputAllYear <- leontief %*% fdAllYear
 
-
 ## bagian PDRB
-pdrbAwal
-proporsiPDRB
-
 proyPdrb <- outputAllYear*proporsiPDRB[,1]
 colProyPdrb <- colSums(proyPdrb) ## 3 angka terakhirnya beda, tp nanti sampe emisinya sama dengan excel
 plot(yearFrom : yearTo,colProyPdrb) #plot pdrb
 
 ## proyeksi konsumsi energi
 #koefisien energi dari sheet energi
-koefEnergi
-
 #tabel konsumsi energi proyeksi
 proyKonsumsiEnergi <- outputAllYear*koefEnergi
-
-
-# tabel proporsi energi yang diambil dari tahun 2015
-propEnergi 
 
 #tabel proyeksi konsumsi energi
 proyKonsumsiEnergi <- outputAllYear*koefEnergi
@@ -394,7 +337,7 @@ proyKonsumsiEnergi <- outputAllYear*koefEnergi
 ### intervensi satelit energi 
 ### dilakukan di 2017:2026 berkurang 10% hcoal dan 5%diesel 
 ### sdgkan di 2027:2030 berkurang 20% hcoal dan 10% diesel karena pembangunan PLTM 2 kali lipatnya
-
+### tabel proporsi energi yang diambil dari tahun 2015
 proyTabelKonsEnergi<-list()
 for (i in 1:ncol(proyKonsumsiEnergi)) { 
   if(i==1){
@@ -403,27 +346,17 @@ for (i in 1:ncol(proyKonsumsiEnergi)) {
     proyTabelKonsEnergi[[i]]<-proyKonsumsiEnergi[,i]*propEnergi*persenBahanBakar2
   }
   else{
-  proyTabelKonsEnergi[[i]]<-proyKonsumsiEnergi[,i]*propEnergi*persenBahanBakar1
+    proyTabelKonsEnergi[[i]]<-proyKonsumsiEnergi[,i]*propEnergi*persenBahanBakar1
   }
 }
 names(proyTabelKonsEnergi)<-paste0("y",yearFrom:yearTo)
 
-#matriks faktor emisi
-matEfBau <- numeric()
-order_energi_name <- names(energyBau)[4:ncol(energyBau)]
-for(m in 1:length(order_energi_name)){
-  matEfBau <- c(matEfBau, efBau[which(efBau[,1]==order_energi_name[m]), 2])
-}
-matEfBau <- diag(matEfBau, nrow = length(matEfBau), ncol = length(matEfBau))
-
-
 # terbentuk 15 tabel proyeksi emisi
 proyEmisi <- list()
 for (i in 1:lengthYear) {
-  proyEmisi[[i]]<-as.matrix(proyTabelKonsEnergi[[i]]) %*% matEfBau
+  proyEmisi[[i]]<-as.matrix(proyTabelKonsEnergi[[i]]) %*% matEfBau #mat faktor emisi dari bau
 }
 names(proyEmisi)<-paste0("y",yearFrom:yearTo)
-
 
 for (i in 1:lengthYear) {
   if(i==1){
@@ -436,16 +369,7 @@ for (i in 1:lengthYear) {
 
 #COLSUM proyekski energi
 colsumProyEmisiSken <- colSums(rowsumProyEmisi)
-plot(yearFrom : yearTo,as.vector(colsumProyEmisiSken))
 
-
-## tabel intensitas emisi 
-#intensitasEmisi <- rowsumProyEmisi/proyPdrb
-#plot(yearFrom : yearTo,as.vector(intensitasEmisi))
-
-#COLSUM intensitas energi
-#colsumProyIntenEmisiSken <- colSums(intensitasEmisi)
-#plot(yearFrom : yearTo,as.vector(colsumProyIntenEmisiSken))
 
 
 ################################################################################
@@ -453,7 +377,7 @@ plot(yearFrom : yearTo,as.vector(colsumProyEmisiSken))
 #           Skenario 2: subtitusi bahan bakar fosil dengan biodiesel           #
 #                                                                              #
 ################################################################################
-# Step 1: definisikan skenario --------------------------------------------------------------
+# Step 1 dan 2: definisikan skenario & pilih sektor yang jadi owner --------------------------------------------------------------
 # berpengaruh pada FD
 ## Asumsi meningkatkan FD sebesar 900 M
 ## 50% bertambah di sektor (kode 11) Industri Batubara dan Pengilangan Migas: sector yang produksi biodiesel
@@ -465,16 +389,7 @@ plot(yearFrom : yearTo,as.vector(colsumProyEmisiSken))
 ## Semua kolom di bahan bakar diesel berkurang 30% di tahun 2030, persentase pengurangan gradual nya tiap tahun dipindahkan ke bahan bakar biodiesel 
 
 
-# Step 2: pilih sektor yang jadi owner ----------------------------------
-## ????
-
-
 # Step 3: masukkan skenario untuk perubahan FD --------------------------
-# data scenario
-fdSken2 #user input
-persenBahanBakarSken2 #user input
-
-
 ################################################################################
 #                                                                              #
 #                                SHEET PROYEKSI sken2                          #
@@ -482,10 +397,6 @@ persenBahanBakarSken2 #user input
 ################################################################################
 
 # Step 4: Merubah akun satelit -----------------------------------------
-
-gdpRate <- 5/100 #user input
-yearFrom <- 2016  #user input
-yearTo <- 2030 #user input
 
 ## bagian FD
 ### JIKA PAKAI SKENARIO 1A --> file fdnya pakai yang skenario
@@ -497,23 +408,14 @@ outputAllYear <- leontief %*% fdAllYear
 
 
 ## bagian PDRB
-pdrbAwal
-proporsiPDRB
-
 proyPdrb <- outputAllYear*proporsiPDRB[,1]
 colProyPdrb <- colSums(proyPdrb) ## 3 angka terakhirnya beda, tp nanti sampe emisinya sama dengan excel
 plot(yearFrom : yearTo,colProyPdrb) #plot pdrb
 
 ## proyeksi konsumsi energi
 #koefisien energi dari sheet energi
-koefEnergi
-
 #tabel konsumsi energi proyeksi
 proyKonsumsiEnergi <- outputAllYear*koefEnergi
-
-
-# tabel proporsi energi yang diambil dari tahun 2015
-propEnergi 
 
 #tabel proyeksi konsumsi energi
 proyKonsumsiEnergi <- outputAllYear*koefEnergi
@@ -522,9 +424,6 @@ proyKonsumsiEnergi <- outputAllYear*koefEnergi
 ### intervensi satelit energi 
 ### dimulai tahun 2017
 ### Semua kolom di bahan bakar diesel berkurang 30% di tahun 2030, persentase pengurangan gradual nya tiap tahun dipindahkan ke bahan bakar biodiesel 
-
-
-
 proyTabelKonsEnergi<-list()
 for (i in 1:ncol(proyKonsumsiEnergi)) { 
   if(i==1){
@@ -535,15 +434,6 @@ for (i in 1:ncol(proyKonsumsiEnergi)) {
   }
 }
 names(proyTabelKonsEnergi)<-paste0("y",yearFrom:yearTo)
-
-#matriks faktor emisi
-matEfBau <- numeric()
-order_energi_name <- names(energyBau)[4:ncol(energyBau)]
-for(m in 1:length(order_energi_name)){
-  matEfBau <- c(matEfBau, efBau[which(efBau[,1]==order_energi_name[m]), 2])
-}
-matEfBau <- diag(matEfBau, nrow = length(matEfBau), ncol = length(matEfBau))
-
 
 # terbentuk 15 tabel proyeksi emisi
 proyEmisi <- list()
@@ -564,7 +454,6 @@ for (i in 1:lengthYear) {
 
 #COLSUM proyekski energi
 colsumProyEmisiSken2 <- colSums(rowsumProyEmisi)
-plot(yearFrom : yearTo,as.vector(colsumProyEmisiSken2))
 
 
 
