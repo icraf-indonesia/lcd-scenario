@@ -1,0 +1,37 @@
+"Kode I-O","Nama Sektor","Hutan Lahan Kering Primer","Hutan Lahan Kering Sekunder","Hutan Rawa Primer","Hutan Rawa Sekunder","Hutan Mangrove Primer","Hutan Mangrove Sekunder","Hutan Tanaman","Semak/Belukar","Belukar Rawa","Savana/Padang Rumput","Perkebunan","Pertanian Lahan Kering","Pertanian Lahan Kering + Semak","Transmigrasi","Sawah","Tambak","Tanah Terbuka","Pertambangan","Permukiman","Tubuh Air","Rawa","Pelabuhan Udara/Laut","Awan"
+1,Padi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0
+2,Tanaman Bahan Makanan lainnya,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0
+3,Karet,0,0,0,0,0,0,0.1,0,0,0,0.2,0,0.3,0,0,0,0,0,0,0,0,0,0
+4,Kelapa Sawit,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,0,0,0,0,0,0,0,0
+5,Kopi,0,0,0,0,0,0,0,0,0,0,0,0,0.2,0,0,0,0,0,0,0,0,0,0
+6,Tanaman Pekebunan Lainnya,0,0,0,0,0,0,0,0,0,0,0.3,0,0.2,0,0,0,0,0,0,0,0,0,0
+7,Peternakan dan hasil-hasilnya,0,0,0,0,0,0,0,0,0,0.3,0,0,0,0,0,0,0,0,0,0,0,0,0
+8,Kayu,0,0.4,0,0.1,0,0,0.9,0,0,0,0,0,0.3,0,0,0,0,0,0,0,0,0,0
+9,Hasil hutan lainnya,0.1,0,0.1,0,0.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+10,Perikanan,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0.2,0.2,0,0
+11,Pertambangan Migas,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.25,0,0,0,0,0
+12,Pertambangan non-Migas,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.25,0,0,0,0,0
+13,Penggalian,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.25,0,0,0,0,0
+14,Pengilangan minyak bumi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.25,0,0,0,0,0
+15,"Industri penggilingan padi, biji-bijian",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+16,Industri Kelapa Sawit,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+17,Industri Makanan dan Minuman Lainnya ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+18,Industri Barang dari Kayu dan Hasil hutan lainnya ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+19,Industri Barang dari Karet dan Plastik ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+20,Industri kertas dan barang dari kertas,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+21,Industri pupuk dan bahan kimia ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+22,"Industri semen, dan barang galian bukan logam",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+23,Industri Lainnya ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+24,"Listrik, Gas dan Air Bersih",0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.015,0,0,0,0
+25,Konstruksi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+26,Perdagangan Besar dan Eceran,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+27,Transportasi ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0
+28,Penyediaan Akomodasi dan Makan Minum,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+29,Informasi dan Komunikasi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+30,Jasa Keuangan dan Asuransi,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+31,Real Estate dan Jasa Perusahaan,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+32,Jasa Administrasi Pemerintahan,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+33,Jasa Pendidikan,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+34,Jasa Kesehatan dan Kegiatan Sosial,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+35,Jasa lainnya,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.005,0,0,0,0
+36,Kegiatan lainnya,0.9,0.6,0.9,0.9,0.9,1,0,1,1,0.7,0,0,0,1,0,0,1,0,0.8,0.8,0.8,0,1
