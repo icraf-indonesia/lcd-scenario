@@ -1,0 +1,37 @@
+V1,V2,LRC_2017
+Padi,Direct land-based,0.00264519
+Tanaman Bahan Makanan lainnya,Direct land-based,0.006578304
+Karet,Direct land-based,0.080759786
+Kelapa Sawit,Direct land-based,0.209235985
+Kopi,Direct land-based,0.039324166
+Tanaman Pekebunan Lainnya,Direct land-based,0.026412987
+Peternakan dan hasil-hasilnya,Direct land-based,5.62E-06
+Kayu,Direct land-based,0.261050597
+Hasil hutan lainnya,Direct land-based,0.052260821
+Perikanan,Direct land-based,0.003630901
+Pertambangan Migas,Direct land-based,0.00012574
+Pertambangan non-Migas,Direct land-based,0.000329663
+Penggalian,Direct land-based,0.001108088
+Pengilangan minyak bumi,Direct land-based,0.00105199
+"Industri penggilingan padi, biji-bijian",Indirect land-based,0.000120092
+Industri Kelapa Sawit,Indirect land-based,0.000164564
+"Industri Makanan dan Minuman Lainnya, kimia dan barang dari karet",Indirect land-based,0.000141818
+"Industri Barang dari Kayu dan Hasil hutan lainnya, barang lain bukan logam",Indirect land-based,0.000603701
+"Industri Barang dari Karet dan Plastik, besi dan baja",Indirect land-based,0.000187868
+"Industri kertas dan barang dari kertas, mesin dan peralatan",Indirect land-based,0.00062785
+Industri pupuk dan bahan kimia,Indirect land-based,0.007520145
+"Industri semen, dan barang galian bukan logam",Indirect land-based,0.001726518
+Industri Lainnya,Indirect land-based,0.002621402
+"Listrik, Gas dan Air Bersih",Non land-based,0.002187746
+Konstruksi,Non land-based,1.88E-05
+Perdagangan Besar dan Eceran,Non land-based,1.23E-05
+"Transportasi ,sungai,  dan penyeberangan",Non land-based,5.37E-06
+Penyediaan Akomodasi dan Makan Minum,Non land-based,0.000123325
+Informasi dan Komunikasi,Non land-based,4.31E-05
+Jasa Keuangan dan Asuransi,Non land-based,5.95E-05
+Real Estate dan Jasa Perusahaan,Non land-based,4.70E-05
+Jasa Administrasi Pemerintahan,Non land-based,4.03E-05
+Jasa Pendidikan,Non land-based,4.73E-05
+Jasa Kesehatan dan Kegiatan Sosial,Non land-based,0.000158486
+"Jasa lainnya, rekreasi & kebudayaan",Non land-based,0.000178109
+Kegiatan lainnya,Non land-based,0

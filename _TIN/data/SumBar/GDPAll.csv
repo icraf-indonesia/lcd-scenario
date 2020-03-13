@@ -1,0 +1,20 @@
+SECTOR,CATEGORY,GDP,OUTPUT,P_OUTPUT,P_GDP,GDP_PROP
+Padi,Pertanian kehutanan dan perikanan,1260708.4,3466527.9,0.36,0,0.363680442
+Tanaman bahan makanan lainnya,Pertanian kehutanan dan perikanan,2216818.4,5186867.7,3.73,0,3.730286092
+Tanaman pertanian lainnya,Pertanian kehutanan dan perikanan,34061211.6,49219480,5.97,0.1,5.954137233
+Peternakan dan hasil-hasilnya,Pertanian kehutanan dan perikanan,2433147.1,4597807.2,2.14,0,2.140674848
+Kehutanan,Pertanian kehutanan dan perikanan,22803185.2,28120250.1,1.71,0.06,1.70665776
+Perikanan,Pertanian kehutanan dan perikanan,6250009.1,7504383.5,2.4,0.02,2.405001026
+Pertambangan dan penggalian,Pertambangan dan penggalian,123077421.9,142070028.9,2.39,0.35,2.397480383
+Industri makanan minuman dan tembakau,Industri pengolahan,35508274.5,113545583.2,10.54,0.1,10.56422589
+Industri lainnya,Industri pengolahan,24668681.5,52607813.5,19.12,0.06,19.08402637
+Pengilangan minyak bumi,Pertambangan dan penggalian,10132344.7,17401861.6,0.58,0.03,0.582256366
+Listrik gas dan air minum,Pengadaan listrik dan gas,584546.1,1878742.7,0.73,0,0.731382158
+Bangunan,Konstruksi,19262905.2,53864216,0.36,0.06,0.357619708
+Perdagangan,Perdagangan besar dan eceran reparasi mobil dan sepeda motor,30230592.2,46244925.3,0.65,0.09,0.653706153
+Hotel dan restoran,Penyediaan akomodasi dan makan minum,2045762.6,3952143.3,1.02,0,1.026555624
+Pengangkutan dan komunikasi,Transportasi dan pergudangan,6719791.1,15872455.3,2.39,0.01,2.383039843
+Lembaga keuangan usaha bangunan dan jasa perusahaan,Jasa perusahaan,8453374,12094105.8,2.7,0.02,2.703233705
+Pemerintahan umum dan petahanan,Administrasi pemerintahan pertahanan dan jaminan sosial wajib,9680861,28841469.8,0.34,0.03,0.335657686
+Jasa-jasa,Jasa lainnya,3301813.6,6698527.9,1.49,0.01,1.492224208
+Kegiatan yang tak jelas batasannya,Jasa lainnya,0,0,0,0,0
