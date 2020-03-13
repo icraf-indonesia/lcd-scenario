@@ -209,7 +209,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
   
   ## Grafik Proyeksi Total Emisi Buangan Limbah ##
   
-  plotEmission <- ggplot(data=totalEmisi_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
+  plotEmission <- ggplot(data=totalEmisiBAU_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
   ggplotly(plotEmission)
 
 
@@ -539,7 +539,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       colnames(rowTotalEmisi) <- year      
       Emisi_padat <- cbind(sector, rowTotalEmisi)
       #Intensitas Emisi
-      inEm_padatTemp <- rowTotalEmisi/intPDRB_All[,2:length(intPDRB_All)]
+      inEm_padatTemp <- rowTotalEmisi/intPDRB_All
       inEm_padat <- cbind(sector, inEm_padatTemp)
     
     #Aksi 2
@@ -571,7 +571,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
   
   ## scenario-specific dataframe of sector><simulation years depicting GDP change against BAU, emission change against BAU and emission intensity change against BAU 
     #Aksi 1
-      deltaPDRB <- as.data.frame(cbind(sector,(intPDRB_All[,2:length(intPDRB_All)] - proyeksiPDRB)))
+      deltaPDRB <- as.data.frame(cbind(sector,(intPDRB_All - proyeksiPDRB)))
       emisiBAU <- cbind(emisi_2016,
                         emisi_2017,
                         emisi_2018,
