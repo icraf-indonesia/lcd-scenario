@@ -51,3 +51,5 @@ ioTotalOutputInverse[is.infinite(ioTotalOutputInverse)] <- 0
 ioTotalOutputInverse <- diag(ioTotalOutputInverse)
 
 rowIncome <- 2
+
+contoh<-read.table("DKS/datapathCSV/01_sektor.csv", header = FALSE, sep=",")
