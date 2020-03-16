@@ -1,5 +1,5 @@
 #set wd di laptop dw
-setwd("C:/dw/ICRAF/redcluew/syntax/lcd-scenario")
+#setwd("C:/dw/ICRAF/redcluew/syntax/lcd-scenario")
 pathcsv <- ("C:/dw/ICRAF/redcluew/syntax/lcd-scenario/_DB")
 
 ###BEGIN: initiate all variables ####
@@ -30,14 +30,14 @@ populationProjection <- readRDS(paste0(datapath, "population"))
 baselineEmission <- readRDS(paste0(datapath, "otherEm"))
 
 # data skenario jika dalam csv atau dataset baru
-#inIntermediateDemand <- paste0(datapathCSV, "/02_input_antara_skenario1.csv")
-inFD <- paste0(datapathCSV, "/17_final_demand_proyeksi_skenario1_b.csv")
-inFD2 <- paste0(datapathCSV, "/17_final_demand_proyeksi_skenario2.csv")
+inFD <- paste0(datapathCSV, "/17_final_demand_proyeksi_sken1_d.csv")
+inFD2 <- paste0(datapathCSV, "/17_final_demand_proyeksi_sken2_e.csv")
 inEmissionFactorEnergiTable<- paste0(datapathCSV, "/10_faktor_emisi_energi.csv") # asumsi faktor emisi tidak berubah
 inProporsiPDRB <- paste0(datapathCSV, "/16_proporsi_pdrb.csv")
-inPersentaseBahanBAkar1 <- paste0(datapathCSV, "/18_persentase_bahan_bakar.csv")
-inPersentaseBahanBAkar2 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_2.csv")
-inPersentaseBahanBAkarSken2 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_sken2.csv")
+inPersentaseBahanBAkar1 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_sken1_tahap1.csv")
+inPersentaseBahanBAkar2 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_sken1_tahap2.csv")
+inPersentaseBahanBAkarSken2 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_sken2_e.csv")
+inDiesel2016 <- paste0(datapathCSV, "/19_konsumsi_diesel_2016_sken2_e.csv")
 
 #indemScen1 <- read.table(inIntermediateDemand, header=F, sep=",")
 fdSken1 <- read.table(inFD, header=TRUE, sep=",", stringsAsFactors = F)
@@ -47,6 +47,7 @@ proporsiPDRB <- read.table(inProporsiPDRB, header=TRUE, sep=",", stringsAsFactor
 persenBahanBakar1 <- read.table(inPersentaseBahanBAkar1, header=F, sep=",", stringsAsFactors = F)
 persenBahanBakar2 <- read.table(inPersentaseBahanBAkar2, header=F, sep=",", stringsAsFactors = F)
 persenBahanBakarSken2 <- read.table(inPersentaseBahanBAkarSken2, header=F, sep=",", stringsAsFactors = F)
+dieselSken2 <- read.table(inDiesel2016, header=T, sep=",", stringsAsFactors = F)
 
 ################################################################################
 #                                                                              #
@@ -424,16 +425,64 @@ proyKonsumsiEnergi <- outputAllYear*koefEnergi
 ### intervensi satelit energi 
 ### dimulai tahun 2017
 ### Semua kolom di bahan bakar diesel berkurang 30% di tahun 2030, persentase pengurangan gradual nya tiap tahun dipindahkan ke bahan bakar biodiesel 
+## tabel pengali bahan bakar untuk kolom diesel (15 tabel) 
+persenDiesel<- list()
+gradual <- rep(0.7,52)
+for (i in 1:(lengthYear-1)) {
+  persenDiesel[[i]] <- as.matrix(gradual^(i/lengthYear))
+}
+
+
+matSatu <- list()
+for (i in 1:lengthYear) {
+  matSatu[[i]] <- as.matrix(matrix(1,nrow = 52,ncol = 26))
+}
+names(matSatu)<-paste0("y", yearFrom:yearTo)
+
+for (i in 1:lengthYear) {
+  if(i==1){
+    matSatu[[i]] <- matSatu[[i]]
+  }
+  else{
+    matSatu[[i]][,5] <- as.vector(persenDiesel[[i-1]]) #mulai dari 2017, GANTI DI KOLOM DIESEL
+  }
+}
+
+
 proyTabelKonsEnergi<-list()
 for (i in 1:ncol(proyKonsumsiEnergi)) { 
   if(i==1){
     proyTabelKonsEnergi[[i]]<-proyKonsumsiEnergi[,i]*propEnergi # tahun 2016 tidak ada pengurangan krn belum diterapkan
   }
   else{
-    proyTabelKonsEnergi[[i]]<-proyKonsumsiEnergi[,i]*propEnergi*persenBahanBakarSken2
+    proyTabelKonsEnergi[[i]]<-proyKonsumsiEnergi[,i]*propEnergi*matSatu[[i]]
   }
 }
 names(proyTabelKonsEnergi)<-paste0("y",yearFrom:yearTo)
+
+## tabel untuk mereplace kolom biogas (15 tabel)
+persenBiogas<- list()
+for (i in 1:(lengthYear-1)) {
+  persenBiogas[[i]] <- as.matrix(dieselSken2-dieselSken2*persenDiesel[[i]])
+}
+
+matNol <- list()
+for (i in 1:lengthYear) {
+  matNol[[i]] <- as.matrix(matrix(0,nrow = 52,ncol = 26))
+}
+
+for (i in 1:lengthYear) {
+  if(i==1){
+    matNol[[i]] <- matNol[[i]]
+  }
+  else{
+    matNol[[i]][,17] <- as.vector(persenBiogas[[i-1]]) #mulai dari 2017, GANTI DI KOLOM DIESEL
+  }
+}
+
+for (i in 1:ncol(proyKonsumsiEnergi)) { 
+  proyTabelKonsEnergi[[i]]<-(proyTabelKonsEnergi[[i]]+(matNol[[i]]))
+}
 
 # terbentuk 15 tabel proyeksi emisi
 proyEmisi <- list()
