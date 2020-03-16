@@ -644,7 +644,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       tableCombineOutput <- data.frame(combineOutput,
                                  stringsAsFactors = FALSE)
       tableCombineKoef <- data.frame(row.names = 1:52,
-                              Koef_Energi = wasteCoef,
+                              Koef_Limbah = wasteCoef,
                               stringsAsFactors = FALSE)
       tableCombineProyeksi <- function(tableCombineOutput,tableCombineKoef){
         for (i in 1:ncol(tableCombineOutput)){

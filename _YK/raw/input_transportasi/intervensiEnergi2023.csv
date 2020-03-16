@@ -1,0 +1,53 @@
+Sektor;HCOAL;BCOAL;COKE;CRUDE;DIESEL;GASOLINE;JETFUEL;LFO;HFO;NAPHTA;OTHPETRO;NATGAS;OTHGAS;WASTE;BIOGASOL;BIODIESEL;BIOGAS;OTHRENEW;ELECTR;HEATPROD;NUCLEAR;HYDRO;GEOTHERM;SOLAR;WIND;OTHSOURC
+Tanaman Pangan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Tanaman Hortikultura;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Perkebunan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Peternakan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa Pertanian dan Perburuan ;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Kehutanan dan Penebangan Kayu;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Perikanan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Pertambangan Minyak Gas dan Panas Bumi;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Pertambangan Bijih Logam;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Pertambangan dan Penggalian Lainnya;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Batubara dan Pengilangan Migas;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Makanan dan Minuman;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Pengolahan Tembakau;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Tekstil dan Pakaian Jadi;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Kulit Barang dari Kulit dan Alas Kaki;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Kayu Barang dari Kayu dan Gabus dan Barang Anyaman dari Bambu Rotan dan Sejenisnya;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Kertas dan Barang dari Kertas Percetakan dan Reproduksi Media Rekaman;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Kimia Farmasi dan Obat Tradisional;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Karet Barang dari Karet dan Plastik;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Barang Galian bukan Logam;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Logam Dasar;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Barang dari Logam Komputer Barang Elektronik Optik dan Peralatan Listrik;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Mesin dan Perlengkapan YTDL;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Alat Angkutan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri Furnitur;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Industri pengolahan lainnya jasa reparasi dan pemasangan mesin dan peralatan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Ketenagalistrikan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Pengadaan Gas dan Produksi Es;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Pengadaan Air Pengelolaan Sampah Limbah dan Daur Ulang;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Konstruksi;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Perdagangan Mobil Sepeda Motor dan Reparasinya;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Perdagangan Besar dan Eceran Bukan Mobil dan Sepeda Motor;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Angkutan Rel;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Angkutan Darat;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Angkutan Laut;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Angkutan Sungai Danau dan Penyeberangan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Angkutan Udara;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Pergudangan dan Jasa Penunjang Angkutan Pos dan Kurir;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Penyediaan Akomodasi;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Penyediaan Makan Minum;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Informasi dan Komunikasi;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa Perantara Keuangan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Asuransi dan Dana Pensiun;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa Keuangan Lainnya;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa Penunjang Keuangan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Real Estate;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa Perusahaan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Administrasi Pemerintahan Pertahanan dan Jaminan Sosial Wajib;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa Pendidikan;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa Kesehatan dan Kegiatan Sosial;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Jasa lainnya;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
+Lainnya;1;1;1;1;1;0.543820481;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1
