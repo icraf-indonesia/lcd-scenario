@@ -3,19 +3,19 @@ library(quadprog)
 library(stringr)
 library(dplyr)
 
-tOutputSeries<-read.csv("landCalc/tOutputSeries.csv")
-LU_tahun<-read.csv("data/JaBar/LU_tahun.csv")
-LDMProp_his<-read.csv("landCalc/LDMProp.csv")
-GDPAll<-readRDS("data/JaBar/GDPAll")
-sector<-readRDS("data/JaBar/sector")
-tpm_template<-read.csv("landCalc/tpm_template.csv")
-tpm_his<-read.csv("landCalc/tpm_his.csv")
-LRCRate_his<-read.csv("landCalc/LRCRate.csv",header = FALSE)
-LRCRate_2<-read.csv("landCalc/LRCRate_2.csv",header=FALSE)
-carbonStock_his<-data.matrix(read.csv("landCalc/carbonStock.csv"))
+tOutputSeries<-read.csv("_TIN/landCalc/tOutputSeries.csv")
+LU_tahun<-read.csv("_TIN/data/JaBar/LU_tahun.csv")
+LDMProp_his<-read.csv("_TIN/landCalc/LDMProp.csv")
+GDPAll<-readRDS("_TIN/data/JaBar/GDPAll")
+sector<-readRDS("_TIN/data/JaBar/sector")
+tpm_template<-read.csv("_TIN/landCalc/tpm_template.csv")
+tpm_his<-read.csv("_TIN/landCalc/tpm_his.csv")
+LRCRate_his<-read.csv("_TIN/landCalc/LRCRate.csv",header = FALSE)
+LRCRate_2<-read.csv("_TIN/landCalc/LRCRate_2.csv",header=FALSE)
+carbonStock_his<-data.matrix(read.csv("_TIN/landCalc/carbonStock.csv"))
 carbonStock_his<-as.matrix(carbonStock_his[,3])
-leontief <- readRDS("data/JaBar/leontief")
-findem_series<-read.csv("landCalc/findem_series.csv",header=FALSE)
+leontief <- readRDS("_TIN/data/JaBar/leontief")
+findem_series<-read.csv("_TIN/landCalc/findem_series.csv",header=FALSE)
 
 
 
@@ -56,7 +56,7 @@ for (i in 1:ncol(LRC_0)){
   if(i==1){
     LRC_0[,i]<-as.matrix(LRC_his)
   } else{
-    LRC_0[,i]<-as.matrix(LRC_his)*as.matrix(LRCRate_his^(i-1))
+    LRC_0[,i]<-as.matrix(LRC_his)*as.matrix(LRCRate_his^(i-1))   #LRCRate_his nanti bisa dimodif di interface
   }
 }
 
@@ -88,7 +88,7 @@ for (i in 1:ncol(LRC_0)){
 
 LRC_2<-matrix(NA, nrow=nrow(landTable_his),ncol=ncol(tOutputSeries))
 for (i in 1:ncol(LRC_2)){
-    LRC_2[,i]<-as.matrix(LRC_his)*as.matrix(LRCRate_2^(i-1))
+    LRC_2[,i]<-as.matrix(LRC_his)*as.matrix(LRCRate_2^(i-1))    #LRCRate_2 nanti bisa dimodif di interface
 }
 
 # LRC_2<-matrix(NA, nrow=nrow(landTable_his),ncol=ncol(tOutputSeries))
@@ -138,17 +138,13 @@ for (i in 1:ncol(tOutputSeries)){
   landCover[,i]<-LDMProp_sektor %*%landReq[,i]
 }
 rownames(landCover)<-colnames(LDMProp_his)
-#### LDM baru ####
-
-
-
 
 ####### hitung matriks transisi
 
 #masukkan 0 pada matriks transisi jika total landcover = 0 
 for (i in 1:nrow(tpm_template)){
   if (sum(landCover[i,])==0){
-  tpm_template[i,]<-t(as.matrix(rep(0,time=ncol(tpm_template))))
+  tpm_template[i,]<-t(as.matrix(rep(0,time=ncol(tpm_template))))     #tpm_template bisa diedit di interface
   } else {}
 }
 for (i in 1:ncol(tpm_template)){
@@ -170,6 +166,7 @@ tpm_template[is.na(tpm_template)]<-namavariabel
 # solve system of linear equations dgn matriks, Ax=B
 
 ##### buat matriks koefisien (matrix_coba)
+## di shiny, reactive function thd line 151
 
 matrix_coba<-matrix(NA,nrow = 46, ncol = jumlahvariabel)
 colnames(matrix_coba)<-namavariabel
@@ -213,6 +210,7 @@ lseiResult_list<-list()
 lseiResult<-list()
 variabel_lsei<-list()
 tpm<-list()
+xsampleResult_list<-list()
 
 for (i in 1:ncol(landCover)){
   if (i==1){
@@ -263,33 +261,42 @@ for (i in 1:length(tpm)){
   # }
 }
 
+
 emissionBAU<-cbind(as.matrix(colnames(tOutputSeries)), as.matrix(colSums(emissionYear_BAU)))
 
+findemTotYear<-colSums(findem_series)
+findemSectorProp<-matrix(nrow=nrow(findem_series),ncol=ncol(findem_series))
+emissionBAU_sector<-matrix(nrow=nrow(findem_series),ncol=ncol(findem_series))
+emIntensityBAU<-matrix(nrow=nrow(findem_series),ncol=ncol(findem_series))
+for (i in 1:nrow(emissionBAU)){
+  for(a in 1:nrow(findemSectorProp)){
+    findemSectorProp[a,i]<-findem_series[a,i]/findemTotYear[i]
+    emissionBAU_sector[a,i]<-findemSectorProp[a,i]*as.numeric(emissionBAU[i,2])
+    emIntensityBAU[,i]<-emissionBAU_sector[,i]/GDP_BAU[,i]
+  }
+}
 
 
 
-####################################### SKENARIO 1 ##############################################################
+################################## Perhitungan Skenario intervensi #########################################
 
-# Rehabilitasi area konservasi & lindung 
-# lahan kritis (semak, savana, & lahan terbuka) di Hutan Lindung -> hutan sekunder lahan kering bekas tebangan
-# findem: sektor 6 (), sektor 34 (), sektor 51 ()
-# intervensi di TPM, perubahan lahan kritis -> hutan sekunder sebesar 2344 Ha disebar merata tiap tahun
-# TPM berubah -> landCover berubah sesuai TPM -> LDM baru -> land Req baru -> 
 
-landScen1_findem<-read.csv("landCalc/landScen1_findem.csv", header = FALSE)
+
+
+landScen1_findem<-read.csv("landCalc/landScen1_findem.csv", header = FALSE)   #landScen1_findem = user input
 landScen1_findemTot<-as.matrix(landScen1_findem+findem_series)
-landScen1_output<-leontief%*%landScen1_findemTot
+landScen1_tOutputSeries<-leontief%*%landScen1_findemTot
 
 landScen1_GDP<-matrix(NA, nrow=nrow(landScen1_findemTot), ncol=ncol(landScen1_findemTot))
 for (i in 1:ncol(landScen1_findemTot)){
-  landScen1_GDP[,i]<-landScen1_output[,i]*GDPAll$P_OUTPUT
+  landScen1_GDP[,i]<-landScen1_tOutputSeries[,i]*GDPAll$P_OUTPUT
 }
 
-landScen1_landReq<-matrix(NA, nrow=nrow(landTable_his), ncol=ncol(landScen1_output))
-colnames(landScen1_landReq)<-colnames(landScen1_output)
+landScen1_landReq<-matrix(NA, nrow=nrow(landTable_his), ncol=ncol(landScen1_tOutputSeries))
+colnames(landScen1_landReq)<-colnames(landScen1_tOutputSeries)
 
-for (i in 1:ncol(landScen1_output)){
-  landScen1_landReq[,i]<-diag(LRC_0[,i])%*%rbind(as.matrix(landScen1_output[,i]),0)
+for (i in 1:ncol(landScen1_tOutputSeries)){
+  landScen1_landReq[,i]<-diag(LRC_0[,i])%*%rbind(as.matrix(landScen1_tOutputSeries[,i]),0)
   landScen1_landReq[53,i]<-sum(LU_tahun[,1])-sum(landScen1_landReq[1:52,i])
 }
 
@@ -301,8 +308,8 @@ for (i in 1:ncol(landScen1_output)){
 # }else{}
 # 
 if (length(landScen1_landReq[landScen1_landReq<0])>=1){
-  for (i in 1:ncol(landScen1_output)){
-    landScen1_landReq[,i]<-diag(LRC_2[,i])%*%rbind(as.matrix(landScen1_output[,i]),0)
+  for (i in 1:ncol(landScen1_tOutputSeries)){
+    landScen1_landReq[,i]<-diag(LRC_2[,i])%*%rbind(as.matrix(landScen1_tOutputSeries[,i]),0)
     landScen1_landReq[53,i]<-sum(LU_tahun[,1])-sum(landScen1_landReq[1:52,i])
   }
 }else{}
@@ -311,14 +318,133 @@ if (length(landScen1_landReq[landScen1_landReq<0])>=1){
 
 rownames(landScen1_landReq)<-c(as.matrix(sector[,1]),"sektor lainnya")
 
+
+
+# #### buat LDM prop (proporsi terhadap sektor) ####
+# LDMLuas<- as.matrix(landTable_his[,3:25])
+# class(LDMLuas)<-"numeric"
+# LDMProp_sektor<-t(LDMLuas)%*%solve(diag(rowSums(LDMLuas)))
+
+##### cari land cover dari landReq yang diketahui: Land Cover<-LDMProp_sektor * LandReq
+landScen1_landCover<-matrix(NA, nrow=nrow(LDMProp_sektor), ncol=ncol(landScen1_tOutputSeries))
+for (i in 1:ncol(landScen1_tOutputSeries)){
+  landScen1_landCover[,i]<-LDMProp_sektor %*%landScen1_landReq[,i]
+}
+rownames(landScen1_landCover)<-colnames(LDMProp_his)
+
+##### Masukkan land cover intervensi ######## 
+
+
+
+####### hitung matriks transisi
+
+#masukkan 0 pada matriks transisi jika total landcover = 0 
+landScen1_tpm_template<-read.csv("landCalc/landScen1_tpm_template.csv")
+for (i in 1:nrow(landScen1_tpm_template)){
+  if (sum(landScen1_landCover[i,])==0){
+    landScen1_tpm_template[i,]<-t(as.matrix(rep(0,time=ncol(landScen1_tpm_template))))     #tpm_template bisa diedit di interface
+  } else {}
+}
+for (i in 1:ncol(landScen1_tpm_template)){
+  if (sum(landScen1_landCover[i,])==0){
+    landScen1_tpm_template[,i]<-as.matrix(rep(0,time=ncol(landScen1_tpm_template)))
+  } else {}
+}
+
+
+
+
+landScen1_jumlahvariabel<-length(landScen1_tpm_template[is.na(landScen1_tpm_template)])
+landScen1_namavariabel<-paste0("x",1:length(landScen1_tpm_template[is.na(landScen1_tpm_template)]))
+landScen1_tpm_template[is.na(landScen1_tpm_template)]<-landScen1_namavariabel
+
+
+# isi matriks transisi dengan menganggap matriks sbg system of linear equations
+
+# solve system of linear equations dgn matriks, Ax=B
+
+##### buat matriks koefisien (matrix_coba)
+## di shiny, reactive function thd line 151
+
+landScen1_matrix_coba<-matrix(NA,nrow = 46, ncol = landScen1_jumlahvariabel)
+colnames(landScen1_matrix_coba)<-landScen1_namavariabel
+landScen1_variabel_x<-list()
+landScen1_variabel_y<-list()
+for (a in 1:nrow(landScen1_tpm_template)){
+  landScen1_variabel_x[[a]]<-t(landScen1_tpm_template[a,])[t(landScen1_tpm_template[a,])!= 0]
+  eval(parse(text=paste0("landScen1_variabel_x_",a,"<-NULL")))
+  eval(parse(text=paste0("landScen1_variabel_x_",a,"<-landScen1_variabel_x[[",a,"]]")))
+  for (i in 1:length(landScen1_variabel_x[[a]])){
+    if(!identical(landScen1_variabel_x[[a]],c(character(0),integer(0)))){
+      eval(parse(text=paste0("landScen1_matrix_coba[",a,",paste0(landScen1_variabel_x_",a,"[",i,"])]<-1")))
+      # landScen1_matrix_coba[a,paste0(landScen1_variabel_n[i])]<-1
+    } else {landScen1_matrix_coba[a,]<-0}
+  }
+}
+for (a in 1:ncol(landScen1_tpm_template)){
+  landScen1_variabel_y[[a]]<-t(landScen1_tpm_template[,a])[t(landScen1_tpm_template[,a])!= 0]
+  eval(parse(text=paste0("landScen1_variabel_y_",a,"<-NULL")))
+  eval(parse(text=paste0("landScen1_variabel_y_",a,"<-landScen1_variabel_y[[",a,"]]")))
+  for (i in 1:length(landScen1_variabel_y[[a]])){
+    if(!identical(landScen1_variabel_y[[a]],numeric(0))){
+      eval(parse(text=paste0("landScen1_matrix_coba[(23+",a,"),paste0(landScen1_variabel_y_",a,"[",i,"])]<-1")))
+      # landScen1_matrix_coba[a,paste0(variabel_n[i])]<-1
+    } else {landScen1_matrix_coba[(23+a),]<-0}
+  }
+}
+
+landScen1_matrix_coba[is.na(landScen1_matrix_coba)]<-0
+
+#####  solve dengan metode LSEI
+
+
+landScen1_matrix_E<-landScen1_matrix_coba
+landScen1_subset_E<- landScen1_matrix_E[(!(rbind(as.matrix(landScen1_landCover[,1]),as.matrix(landScen1_landCover[,1]))) == 0),]
+landScen1_matrix_G=diag(nrow=landScen1_jumlahvariabel)
+landScen1_matrix_H=matrix(rep(0, time=landScen1_jumlahvariabel))
+landScen1_matrix_F<-list()
+landScen1_subset_F<-list()
+landScen1_lseiResult_list<-list()
+landScen1_lseiResult<-list()
+landScen1_variabel_lsei<-list()
+landScen1_tpm<-list()
+
+for (i in 1:ncol(landScen1_landCover)){
+  if (i==1){
+    landScen1_tpm[[i]]<-as.matrix(tpm_his)
+  } else{
+    landScen1_matrix_F[[i]]<-rbind(as.matrix(landScen1_landCover[,i-1]), as.matrix(landScen1_landCover[,i]))
+    landScen1_subset_F[[i]]<- as.matrix(landScen1_matrix_F[[i]][!(rowSums(landScen1_matrix_F[[i]]) == 0),])
+    landScen1_lseiResult_list[[i]]<-lsei(E = landScen1_subset_E, F = landScen1_subset_F[[i]], G=landScen1_matrix_G, H=landScen1_matrix_H)
+    landScen1_lseiResult[[i]]<-as.matrix(unlist(landScen1_lseiResult_list[[i]]))
+    landScen1_variabel_lsei[[i]]<-as.matrix(as.numeric(landScen1_lseiResult[[i]][1:landScen1_jumlahvariabel,]))
+    row.names(landScen1_variabel_lsei[[i]])<-landScen1_namavariabel
+    landScen1_tpm[[i]]<-as.matrix(landScen1_tpm_template)
+    for (a in 1:nrow(landScen1_tpm[[i]])){
+      for(b in 1:ncol(landScen1_tpm[[i]])){
+        if (landScen1_tpm[[i]][a,b]==0){
+          landScen1_tpm[[i]][a,b]<-as.numeric(0)
+        } else {landScen1_tpm[[i]][a,b]<-as.numeric(landScen1_variabel_lsei[[i]][paste0(landScen1_tpm_template[a,b]),1])
+        }
+      }
+    }
+    landScen1_tpm[[i]]<-as.matrix(landScen1_tpm[[i]])
+    rownames(landScen1_tpm[[i]])<-colnames(LDMProp_his)
+  }
+}
+
+
+
+
+
 ######  buat input intervensi 1 ######
 
     ## Rule ##
-    landScen1_tpmRule<-matrix(0, nrow=nrow(tpm_his), ncol=ncol(tpm_his))
-    landScen1_tpmRule[9,2]<- landScen1_tpmRule[2,9]+(0.23148209*2344/15)
+    landScen1_tpmRule<-matrix(0, nrow=nrow(tpm_his), ncol=ncol(tpm_his))   #kalau intervensi di LUTM, landScen1_tpmRule adalah user input
+    landScen1_tpmRule[9,2]<- landScen1_tpmRule[2,9]+(0.23148209*2344/15)    #proporsi dihitung di luar, tolong dihitung di rcode
     landScen1_tpmRule[18,2]<- landScen1_tpmRule[2,18]+(0.76851791*2344/15)
-    landScen1_tpmRule[12,18]<-landScen1_tpmRule[2,18]-(2344/15/2)
-    landScen1_tpmRule[12,9]<-landScen1_tpmRule[2,18]-(2344/15/2)
+    landScen1_tpmRule[12,18]<-landScen1_tpmRule[2,18]-(2344/15/2)     #harusnya landScen1_tpmRule[9,]
+    landScen1_tpmRule[12,9]<-landScen1_tpmRule[2,18]-(2344/15/2)      
     
     #### tpm skenario 1 ####
     
@@ -372,15 +498,15 @@ landScen1_emission<-cbind(as.matrix(colnames(tOutputSeries)), as.matrix(colSums(
 
 landScen2_findem<-read.csv("landCalc/landScen1_findem.csv", header = FALSE)
 landScen2_findemTot<-as.matrix(landScen2_findem+findem_series)
-landScen2_output<-leontief%*%landScen2_findemTot
+landScen2_tOutputSeries<-leontief%*%landScen2_findemTot
 
 landScen2_GDP<-matrix(NA, nrow=nrow(landScen2_findemTot), ncol=ncol(landScen2_findemTot))
 for (i in 1:ncol(landScen2_findemTot)){
-  landScen2_GDP[,i]<-landScen2_output[,i]*GDPAll$P_OUTPUT
+  landScen2_GDP[,i]<-landScen2_tOutputSeries[,i]*GDPAll$P_OUTPUT
 }
 
-landScen2_landReq<-matrix(NA, nrow=nrow(landTable_his), ncol=ncol(landScen2_output))
-colnames(landScen2_landReq)<-colnames(landScen2_output)
+landScen2_landReq<-matrix(NA, nrow=nrow(landTable_his), ncol=ncol(landScen2_tOutputSeries))
+colnames(landScen2_landReq)<-colnames(landScen2_tOutputSeries)
 
 ###### buat input intervensi 2 #######
 
@@ -439,22 +565,24 @@ landScen2_emission<-cbind(as.matrix(colnames(tOutputSeries)), as.matrix(colSums(
 
 landScen3_findem<-read.csv("landCalc/landScen3_findem.csv", header = FALSE)
 landScen3_findemTot<-as.matrix(landScen3_findem+findem_series)
-landScen3_output<-leontief%*%landScen3_findemTot
+landScen2_tOutputSeries<-leontief%*%landScen3_findemTot
 
 landScen3_GDP<-matrix(NA, nrow=nrow(landScen3_findemTot), ncol=ncol(landScen3_findemTot))
 for (i in 1:ncol(landScen3_findemTot)){
-  landScen3_GDP[,i]<-landScen3_output[,i]*GDPAll$P_OUTPUT
+  landScen3_GDP[,i]<-landScen2_tOutputSeries[,i]*GDPAll$P_OUTPUT
 }
 
-landScen3_landReq<-matrix(NA, nrow=nrow(landTable_his), ncol=ncol(landScen3_output))
-colnames(landScen3_landReq)<-colnames(landScen3_output)
+landScen3_landReq<-matrix(NA, nrow=nrow(landTable_his), ncol=ncol(landScen2_tOutputSeries))
+colnames(landScen3_landReq)<-colnames(landScen2_tOutputSeries)
 
 #### buat input intervensi 3 #####
 
 ## Rule ##
 landScen3_tpmChange<-matrix(1, nrow=nrow(tpm_his), ncol=ncol(tpm_his))
-landScen3_tpmChange[1,2:23]<- 0.03
-landScen3_tpmChange[2,3:23]<- 0.03
+landScen3_tpmChange[1,2:23]<- 0.3
+landScen3_tpmChange[2,3:23]<- 0.3
+landScen3_tpmChange[5,6:23]<-0.3
+landScen3_tpmChange[6,6:23]<-0.3
 
 landScen3_tpmRule<-list()
 for (i in 1:length(tpm)){
