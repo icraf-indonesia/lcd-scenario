@@ -568,6 +568,9 @@ for (i in 1:lengthYear) {
 }
 names(proyEmisi_Comb)<-paste0("y",yearFrom:yearTo)
 
+
+
+
 for (i in 1:lengthYear) {
   if(i==1){
     rowsumProyEmisi_Comb <- rowSums(proyEmisi_Comb[[i]])
@@ -585,3 +588,79 @@ colsumProyEmisi_Comb <- colSums(rowsumProyEmisi_Comb)
 proyIntensitas_Comb <- colsumProyEmisi_Comb/colProyPdrb_Comb
 tabelIntesitas_Comb <- cbind.data.frame(year,proyIntensitas_Comb)
 
+
+
+#######  ______________________________________________    #######
+#######            PDRB, EMISI DAN INTENSITAS EMISI        ####### 
+#######                    PER SEKTOR                      ######
+#######  ______________________________________________    ######
+
+#PDRB
+#Proyeksi PDRB per sektor Skenario 1
+rowProyPdrb_scen1 <- rowSums(proyPdrb_scen1)
+ProyPDRB_Sector1<- cbind.data.frame(sector,rowProyPdrb_scen1)
+
+#Proyeksi PDRB per sektor Skenario 2
+rowProyPdrb_scen2 <- rowSums(proyPdrb_scen2)
+ProyPDRB_Sector2<- cbind.data.frame(sector,rowProyPdrb_scen2)
+
+#Proyeksi PDRB per sektor Aksi Kombinasi
+rowProyPdrb_Comb <- rowSums(proyPdrb_Comb)
+ProyPDRB_Comb<- cbind.data.frame(sector,rowProyPdrb_Comb)
+
+
+#EMISI
+#Proyeksi Emisi per sektor Skenario 1
+rowsumProyEmisi_s1 <- list()
+for (i in 1:length(year)) {
+    rowsumProyEmisi_s1 [[i]]<- rowSums(proyEmisi_s1[[i]])
+}
+
+tabelProyEms_sektor1 <- as.data.frame(rowsumProyEmisi_s1)
+names(tabelProyEms_sektor1)<-paste0("Emisi_",yearFrom:yearTo)    
+
+
+#Proyeksi Emisi per sektor Skenario 1
+rowsumProyEmisi_s1 <- list()
+for (i in 1:length(year)) {
+  rowsumProyEmisi_s1 [[i]]<- rowSums(proyEmisi_s1[[i]])
+}
+
+tabelProyEms_sektor1 <- as.data.frame(rowsumProyEmisi_s1)
+names(tabelProyEms_sektor1)<-paste0("Emisi_",yearFrom:yearTo)  
+
+
+#Proyeksi Emisi per sektor Skenario 2
+rowsumProyEmisi_s2 <- list()
+for (i in 1:length(year)) {
+  rowsumProyEmisi_s2 [[i]]<- rowSums(proyEmisi_s2[[i]])
+}
+
+tabelProyEms_sektor2 <- as.data.frame(rowsumProyEmisi_s2)
+names(tabelProyEms_sektor2)<-paste0("Emisi_",yearFrom:yearTo) 
+
+
+#Proyeksi Emisi per sektor Kombinasi Aksi
+rowProyEmisi_Comb <- list()
+for (i in 1:length(year)) {
+  rowProyEmisi_Comb [[i]]<- rowSums(proyEmisi_Comb[[i]])
+}
+
+tabelProyEms_Comb <- as.data.frame(rowProyEmisi_Comb)
+names(tabelProyEms_Comb)<-paste0("Emisi_",yearFrom:yearTo)
+
+
+#INTENSITAS EMISI
+
+#Proyeksi Intensitas Emisi per Sektor
+
+
+
+
+
+
+
+#######  ______________________________________________    #######
+#######            PDRB, EMISI DAN INTENSITAS EMISI        ####### 
+#######              BAU VS SKENARIO PER SEKTOR            ######
+#######  ______________________________________________    ######
