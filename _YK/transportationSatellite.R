@@ -322,7 +322,7 @@ totalEmisiEnergiBAU_All <- as.data.frame(cbind(year, totalEmisiEnergi_All))
       for (i in 1:length(year)){
         eval(parse(text=paste("emisiBAU_[[",i,"]] <- emisiEnergi_", i, "", sep="")))
       }
-      emisiBAU <- as.data.frame(rowTotalEmisiCFD_)
+      emisiBAU <- as.data.frame(emisiBAU_)
       colnames(emisiBAU) <- year
       deltaEmisi <- as.data.frame(cbind(sector, (rowTotalEmisiBRT  - emisiBAU)))
       
