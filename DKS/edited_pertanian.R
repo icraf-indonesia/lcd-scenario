@@ -5,7 +5,6 @@ library(tidyr)
 
 
 
-
 ###BEGIN: initiate all variables ####
 # username <- "alfanugraha"
 # password <- "1234"
@@ -241,6 +240,7 @@ for (i in 1:ncol(proyKonsumsiPertanian)) {
 names(proyTabelKonsPertanian)<-paste0("y",yearFrom:yearTo)
         
 
+##### 5.Proyeksi Emisi  ######
 #matriks faktor emisi
 matEfBau <- numeric()
 order_Pertanian_name <- names(pertanian_Bau)[4:ncol(pertanian_Bau)]
@@ -266,9 +266,8 @@ for (i in 1:lengthYear) {
   }
 }
 
-#COLSUM proyeksi pertanian
+#COLSUM proyeksi emisi pertanian
 colsumProyEmisi <- colSums(rowsumProyEmisi)
-
 
 
 
@@ -397,6 +396,7 @@ outputScen2 <- leontief %*% FD_Scenario2
 
 #Proyeksi PDRB (2016-2030)
 proyPdrb_scen2 <- outputScen2*proporsiPDRB[,1]
+colnames(proyPdrb_scen2)<-paste0("PDRB_",yearFrom:yearTo)
 colProyPdrb_scen2 <- colSums(proyPdrb_scen2) ## 3 angka terakhirnya beda, tp nanti sampe emisinya sama dengan excel
 plot(yearFrom : yearTo,colProyPdrb_scen2) #plot pdrb
 
@@ -595,30 +595,13 @@ tabelIntesitas_Comb <- cbind.data.frame(year,proyIntensitas_Comb)
 #######                    PER SEKTOR                      ######
 #######  ______________________________________________    ######
 
-#PDRB
+
+#### Skenario 1 Per Sektor #####
+
 #Proyeksi PDRB per sektor Skenario 1
-rowProyPdrb_scen1 <- rowSums(proyPdrb_scen1)
-ProyPDRB_Sector1<- cbind.data.frame(sector,rowProyPdrb_scen1)
-
-#Proyeksi PDRB per sektor Skenario 2
-rowProyPdrb_scen2 <- rowSums(proyPdrb_scen2)
-ProyPDRB_Sector2<- cbind.data.frame(sector,rowProyPdrb_scen2)
-
-#Proyeksi PDRB per sektor Aksi Kombinasi
-rowProyPdrb_Comb <- rowSums(proyPdrb_Comb)
-ProyPDRB_Comb<- cbind.data.frame(sector,rowProyPdrb_Comb)
-
-
-#EMISI
-#Proyeksi Emisi per sektor Skenario 1
-rowsumProyEmisi_s1 <- list()
-for (i in 1:length(year)) {
-    rowsumProyEmisi_s1 [[i]]<- rowSums(proyEmisi_s1[[i]])
-}
-
-tabelProyEms_sektor1 <- as.data.frame(rowsumProyEmisi_s1)
-names(tabelProyEms_sektor1)<-paste0("Emisi_",yearFrom:yearTo)    
-
+proyPdrb_scen1 <- outputScen1*proporsiPDRB[,1]
+colnames(proyPdrb_scen1)<-paste0("PDRB_",yearFrom:yearTo)
+ProyPDRB_Sector1<- cbind.data.frame(sector,proyPdrb_scen1)
 
 #Proyeksi Emisi per sektor Skenario 1
 rowsumProyEmisi_s1 <- list()
@@ -630,6 +613,21 @@ tabelProyEms_sektor1 <- as.data.frame(rowsumProyEmisi_s1)
 names(tabelProyEms_sektor1)<-paste0("Emisi_",yearFrom:yearTo)  
 
 
+#Proyeksi Intensitas Emisi per Sektor Skenario 1
+IE_sektor1<- tabelProyEms_sektor1/ProyPDRB_Sector1[,3:17]
+colnames(IE_sektor1)<-paste0("IE_",yearFrom:yearTo)
+IETable_sektor1<- cbind.data.frame(sector,IE_sektor1)
+
+
+
+
+###### Skenario 2 per sektor ########
+
+#Proyeksi PDRB per sektor Skenario 2
+proyPdrb_scen2 <- outputScen2*proporsiPDRB[,1]
+colnames(proyPdrb_scen2)<-paste0("PDRB_",yearFrom:yearTo)
+ProyPDRB_Sector2<- cbind.data.frame(sector,proyPdrb_scen2)
+
 #Proyeksi Emisi per sektor Skenario 2
 rowsumProyEmisi_s2 <- list()
 for (i in 1:length(year)) {
@@ -638,6 +636,20 @@ for (i in 1:length(year)) {
 
 tabelProyEms_sektor2 <- as.data.frame(rowsumProyEmisi_s2)
 names(tabelProyEms_sektor2)<-paste0("Emisi_",yearFrom:yearTo) 
+
+#Proyeksi Intensitas Emisi per Sektor Skenario 2
+IE_sektor2<- tabelProyEms_sektor2/ProyPDRB_Sector2[,3:17]
+colnames(IE_sektor2)<-paste0("IE_",yearFrom:yearTo)
+IETable_sektor2<- cbind.data.frame(sector,IE_sektor2)
+                                   
+ 
+                                  
+                                   
+######## Skenario Kombinasi Aksi per Sektor ########
+#Proyeksi PDRB per sektor Aksi Kombinasi
+proyPdrb_Comb <- outputComb*proporsiPDRB[,1]
+colnames(proyPdrb_Comb)<-paste0("PDRB_",yearFrom:yearTo)
+ProyPDRB_Combi<- cbind.data.frame(sector,proyPdrb_Comb)
 
 
 #Proyeksi Emisi per sektor Kombinasi Aksi
@@ -649,14 +661,10 @@ for (i in 1:length(year)) {
 tabelProyEms_Comb <- as.data.frame(rowProyEmisi_Comb)
 names(tabelProyEms_Comb)<-paste0("Emisi_",yearFrom:yearTo)
 
-
-#INTENSITAS EMISI
-
-#Proyeksi Intensitas Emisi per Sektor
-
-
-
-
+#Proyeksi Intensitas Emisi per Sektor Kombinasi Aksi
+IE_Comb<- tabelProyEms_Comb/ProyPDRB_Combi[,3:17]
+colnames(IE_Comb)<-paste0("IE_",yearFrom:yearTo)
+IETable_Comb<- cbind.data.frame(sector,IE_Comb)
 
 
 
@@ -664,3 +672,81 @@ names(tabelProyEms_Comb)<-paste0("Emisi_",yearFrom:yearTo)
 #######            PDRB, EMISI DAN INTENSITAS EMISI        ####### 
 #######              BAU VS SKENARIO PER SEKTOR            ######
 #######  ______________________________________________    ######
+
+
+#########            BAU VS Skenario 1       #############
+
+
+######## Delta PDRB BAU VS SKenario 1 #######
+deltaPDRB_S1 <- ProyPDRB_Sector1[,3:17]-proyPdrb
+colnames(deltaPDRB_S1)<-paste0("DeltaPDRB_",yearFrom:yearTo)
+TabledeltaPDRB_S1 <- cbind.data.frame(sector,deltaPDRB_S1)
+
+######## Emisi ##########
+#Proyeksi Emisi per sektor Skenario BAU
+rowsumProyEmisi_BAU <- list()
+for (i in 1:length(year)) {
+  rowsumProyEmisi_BAU [[i]]<- rowSums(proyEmisi[[i]])
+}
+tabelProyEms_BAU <- as.data.frame(rowsumProyEmisi_BAU)
+names(tabelProyEms_BAU)<-paste0("EmisiBAU_",yearFrom:yearTo)
+
+######### Delta Emisi BAU VS SKenario 1 #########
+deltaEmisi_S1 <- tabelProyEms_sektor1-tabelProyEms_BAU
+colnames(deltaEmisi_S1)<-paste0("DeltaEmisi_",yearFrom:yearTo)
+TabledeltaEmisi_S1 <- cbind.data.frame(sector,deltaEmisi_S1)
+
+
+######## Intensitas Emisi ##########
+#Proyeksi Intensitas Emisi per sektor Skenario BAU
+IE_BAU <- tabelProyEms_BAU/proyPdrb
+
+#Delta IE BAU VS Skenario 1 #######
+deltaIE_S1 <- IE_sektor1-IE_BAU
+colnames(deltaIE_S1)<-paste0("DeltaIE_",yearFrom:yearTo)
+TabledeltaIE_S1 <- cbind.data.frame(sector,deltaIE_S1)
+
+
+
+
+#########            BAU VS Skenario 2       #############
+
+######## Delta PDRB BAU VS SKenario 2 #######
+deltaPDRB_S2 <- ProyPDRB_Sector2[,3:17]-proyPdrb
+colnames(deltaPDRB_S2)<-paste0("DeltaPDRB_",yearFrom:yearTo)
+TabledeltaPDRB_S2 <- cbind.data.frame(sector,deltaPDRB_S2)
+
+
+######### Delta Emisi BAU VS SKenario 2 #########
+deltaEmisi_S2 <- tabelProyEms_sektor2-tabelProyEms_BAU
+colnames(deltaEmisi_S2)<-paste0("DeltaEmisi_",yearFrom:yearTo)
+TabledeltaEmisi_S2 <- cbind.data.frame(sector,deltaEmisi_S2)
+
+
+#Delta IE BAU VS Skenario 2 #######
+deltaIE_S2 <- IE_sektor2-IE_BAU
+colnames(deltaIE_S2)<-paste0("DeltaIE_",yearFrom:yearTo)
+TabledeltaIE_S2 <- cbind.data.frame(sector,deltaIE_S2)
+
+
+
+
+#########            BAU VS Kombinasi Aksi       #############
+
+######## Delta PDRB BAU VS Kombinasi Aksi #######
+deltaPDRB_Comb <- proyPdrb_Comb - proyPdrb
+colnames(deltaPDRB_Comb)<-paste0("DeltaPDRB_",yearFrom:yearTo)
+TabledeltaPDRB_Comb <- cbind.data.frame(sector,deltaPDRB_Comb)
+
+
+######### Delta Emisi BAU VS Kombinasi Aksi #########
+deltaEmisi_Comb <- tabelProyEms_Comb - tabelProyEms_BAU
+colnames(deltaEmisi_Comb)<-paste0("DeltaEmisi_",yearFrom:yearTo)
+TabledeltaEmisi_Comb <- cbind.data.frame(sector,deltaEmisi_Comb)
+
+
+#Delta IE BAU VS Kombinasi Aksi #######
+deltaIE_Comb <- IE_Comb-IE_BAU
+colnames(deltaIE_Comb)<-paste0("DeltaIE_",yearFrom:yearTo)
+TabledeltaIE_Comb <- cbind.data.frame(sector,deltaIE_Comb)
+
