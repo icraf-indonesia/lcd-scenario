@@ -39,6 +39,25 @@ inPersentaseBahanBAkar2 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_sken1
 inPersentaseBahanBAkarSken2 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_sken2_f.csv")
 inDiesel2016 <- paste0(datapathCSV, "/19_konsumsi_diesel_2016_sken2_f.csv")
 
+#gabungan skenario 1 dan 2
+inFDS1S2 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/20_s1s2_FD.csv")
+inKonsS1S22016 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2016.csv")
+inKonsS1S22017 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2017.csv")
+inKonsS1S22018 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2018.csv")
+inKonsS1S22019 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2019.csv")
+inKonsS1S22020 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2020.csv")
+inKonsS1S22021 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2021.csv")
+inKonsS1S22022 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2022.csv")
+inKonsS1S22023 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2023.csv")
+inKonsS1S22024 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2024.csv")
+inKonsS1S22025 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2025.csv")
+inKonsS1S22026 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2026.csv")
+inKonsS1S22027 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2027.csv")
+inKonsS1S22028 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2028.csv")
+inKonsS1S22029 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2029.csv")
+inKonsS1S22030 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2030.csv")
+
+
 #indemScen1 <- read.table(inIntermediateDemand, header=F, sep=",")
 fdSken1 <- read.table(inFD, header=TRUE, sep=",", stringsAsFactors = F)
 fdSken2 <- read.table(inFD2, header=TRUE, sep=",", stringsAsFactors = F)
@@ -48,6 +67,23 @@ persenBahanBakar1 <- read.table(inPersentaseBahanBAkar1, header=F, sep=",", stri
 persenBahanBakar2 <- read.table(inPersentaseBahanBAkar2, header=F, sep=",", stringsAsFactors = F)
 persenBahanBakarSken2 <- read.table(inPersentaseBahanBAkarSken2, header=F, sep=",", stringsAsFactors = F)
 dieselSken2 <- read.table(inDiesel2016, header=T, sep=",", stringsAsFactors = F)
+
+fsS1S2 <- read.table(inFDS1S2, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22016 <- read.table(inKonsS1S22016, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22017 <- read.table(inKonsS1S22017, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22018 <- read.table(inKonsS1S22018, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22019 <- read.table(inKonsS1S22019, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22020 <- read.table(inKonsS1S22020, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22021 <- read.table(inKonsS1S22021, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22022 <- read.table(inKonsS1S22022, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22023 <- read.table(inKonsS1S22023, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22024 <- read.table(inKonsS1S22024, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22025 <- read.table(inKonsS1S22025, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22026 <- read.table(inKonsS1S22026, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22027 <- read.table(inKonsS1S22027, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22028 <- read.table(inKonsS1S22028, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22029 <- read.table(inKonsS1S22029, header=T, sep=",", stringsAsFactors = F)
+KonsS1S22030 <- read.table(inKonsS1S22030, header=T, sep=",", stringsAsFactors = F)
 
 ################################################################################
 #                                                                              #
@@ -483,21 +519,113 @@ colnames(rowsumProyEmisiSken2) <- paste0("y",yearFrom:yearTo)
 colsumProyEmisiSken2 <- colSums(rowsumProyEmisiSken2)
 
 
+ 
+
+
 ################################################################################
 #                                                                              #
-#                         table delta: Skenario - BAU                          #
+#                          GABUNGAN SKENARIO 1 DAN 2                           #
+#                                                                              #
+################################################################################
+fdAllYearS1S2 <- as.matrix(fsS1S2)
+
+## bagian Output
+outputAllYearS1S2 <- leontief %*% fdAllYearS1S2
+
+## bagian PDRB
+proyPdrbS1S2 <- outputAllYearS1S2*proporsiPDRB[,1]
+colProyPdrbS1S2 <- colSums(outputAllYearS1S2) ## 3 angka terakhirnya beda, tp nanti sampe emisinya sama dengan excel
+plot(yearFrom : yearTo,colProyPdrbS1S2) #plot pdrb
+
+##konsumsi energi
+KonsS1S22016 <- KonsS1S22016[,-27]
+KonsS1S22017 <- KonsS1S22017[,-27]
+KonsS1S22018 <- KonsS1S22018[,-27]
+KonsS1S22019 <- KonsS1S22019[,-27]
+KonsS1S22020 <- KonsS1S22020[,-27]
+KonsS1S22021 <- KonsS1S22021[,-27]
+KonsS1S22022 <- KonsS1S22022[,-27]
+KonsS1S22023 <- KonsS1S22023[,-27]
+KonsS1S22024 <- KonsS1S22024[,-27]
+KonsS1S22025 <- KonsS1S22025[,-27]
+KonsS1S22026 <- KonsS1S22026[,-27]
+KonsS1S22027 <- KonsS1S22027[,-27]
+KonsS1S22028 <- KonsS1S22028[,-27]
+KonsS1S22029 <- KonsS1S22029[,-27]
+KonsS1S22030 <- KonsS1S22030[,-27]
+
+proyTabelKonsEnergiS1S2<-list()
+for (i in 1:lengthYear) { 
+  if(i==1){
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22016)
+  }else if (i==2) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22017) 
+  }else if (i==3) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22018) 
+  }else if (i==4) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22019) 
+  }else if (i==5) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22020) 
+  }else if (i==6) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22021) 
+  }else if (i==7) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22022) 
+  }else if (i==8) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22023) 
+  }else if (i==9) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22024) 
+  }else if (i==10) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22025) 
+  }else if (i==11) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22026) 
+  }else if (i==12) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22027) 
+  }else if (i==13) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22028) 
+  }else if (i==14) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22029) 
+  }else if (i==15) {
+    proyTabelKonsEnergiS1S2[[i]]<-as.matrix(KonsS1S22030) 
+  }
+}
+names(proyTabelKonsEnergiS1S2)<-paste0("y",yearFrom:yearTo)
+
+# terbentuk 15 tabel proyeksi emisi
+proyEmisiS1S2 <- list()
+for (i in 1:lengthYear) {
+  proyEmisiS1S2[[i]]<-as.matrix(proyTabelKonsEnergiS1S2[[i]]) %*% matEfBau
+}
+names(proyEmisiS1S2)<-paste0("y",yearFrom:yearTo)
+
+
+for (i in 1:lengthYear) {
+  if(i==1){
+    rowsumProyEmisiS1S2 <- rowSums(proyEmisiS1S2[[i]])
+  }else{
+    rowsumProyEmisiS1S2<- cbind(rowsumProyEmisiS1S2,rowSums(proyEmisiS1S2[[i]]))
+  }
+}
+colnames(rowsumProyEmisiS1S2) <- paste0("y",yearFrom:yearTo)
+
+
+#COLSUM proyekski energi
+colsumProyEmisiS1S2 <- colSums(rowsumProyEmisiS1S2)
+plot(yearFrom : yearTo,colsumProyEmisiS1S2)
+
+################################################################################
+#                                                                              #
+#          table delta PDRB DAN EMISI: Skenario - BAU                          #
 #                                                                              #
 ################################################################################
 # delta PDRB
 deltaPDRBSken1 <- as.data.frame(colSums(proyPdrbSken1) - colSums(proyPdrb))  
-deltaPDRBSken2 <- as.data.frame(colSums(proyPdrbSken1) - colSums(proyPdrb))  
+deltaPDRBSken2 <- as.data.frame(colSums(proyPdrbSken1) - colSums(proyPdrb)) 
+deltaPDRBS1S2 <- as.data.frame(colSums(proyPdrbS1S2) - colSums(proyPdrb)) 
 
 # delta Emisi
 deltaEmisiSken1 <- as.data.frame(colsumProyEmisiSken1 - colsumProyEmisi)  
-deltaEmisiSken2 <- as.data.frame(colsumProyEmisiSken2 - colsumProyEmisi)  
-
-
-
+deltaEmisiSken2 <- as.data.frame(colsumProyEmisiSken2 - colsumProyEmisi) 
+deltaEmisiS1S2 <- as.data.frame(colsumProyEmisiS1S2 - colsumProyEmisi)
 
 ################################################################################
 #                                                                              #
@@ -516,7 +644,6 @@ saveRDS(deltaEmisiSken1,"_DB/save rds file/deltaEmisiSken1.rds")
 
 
 
-
 # SKENARIO 2
 saveRDS(fdAllYearSken2,"_DB/save rds file/fdAllYearSken1.rds") #FD
 saveRDS(proyPdrbSken2,"_DB/save rds file/proyPdrbSken1.rds") #PDRB
@@ -527,4 +654,16 @@ saveRDS(colsumProyEmisiSken2,"_DB/save rds file/colsumProyEmisiSken2.rds") #cols
 saveRDS(deltaPDRBSken2,"_DB/save rds file/deltaPDRBSken2.rds")
 saveRDS(deltaEmisiSken2,"_DB/save rds file/deltaEmisiSken2.rds")
 
+# SKENARIO 1 dan 2
+saveRDS(fdAllYearS1S2,"_DB/save rds file/fdAllYearS1S2.rds") #FD
+saveRDS(proyPdrbS1S2,"_DB/save rds file/proyPdrbS1S2.rds") #PDRB
+saveRDS(proyTabelKonsEnergiS1S2,"_DB/save rds file/proyTabelKonsEnergiS1S2.rds") #PROYEKSI  KONSUMSI 
+saveRDS(proyEmisiS1S2,"_DB/save rds file/proyEmisiS1S2.rds") #PROYEKSI EMISI
+saveRDS(rowsumProyEmisiS1S2,"_DB/save rds file/rowsumProyEmisiS1S2.rds") #rowsum emisi
+saveRDS(colsumProyEmisiS1S2,"_DB/save rds file/colsumProyEmisiS1S2.rds") #colsum emisi
+saveRDS(deltaPDRBS1S2,"_DB/save rds file/deltaPDRBS1S2.rds")
+saveRDS(deltaEmisiS1S2,"_DB/save rds file/deltaEmisiS1S2.rds")
 
+
+write.csv(colProyPdrbS1S2,"_DB/csv gabungan sken 1 dan sken 2/colProyPdrbS1S2.csv")
+write.csv(colsumProyEmisiS1S2,"_DB/csv gabungan sken 1 dan sken 2/colsumProyEmisiS1S2.csv")
