@@ -173,31 +173,19 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
   
   ## Membuat tabel "Total Buangan dan Faktor Emisi" tahun awal-akhir ##
   
+  i <- 1:length(year)
   eval(parse(text=(paste("tableBuanganLimbahAll_",  year, "<-propLimbah * proyeksiBAULimbah$`", year, "`", sep=""))))
   eval(parse(text=(paste("tableEmisi_", year, "<- as.matrix(tableBuanganLimbahAll_", year,")", "%*% input_ef_matrix", sep=""))))
-  eval(parse(text=(paste("emisi_", year, "<- as.data.frame(rowSums(tableEmisi_", year,"))", sep=""))))
-  eval(parse(text=(paste("totalEmisi_", year, "<- sum(emisi_", year, ")", sep=""))))
-  # Penggabungan total emisi masih manual
-  ## Buat looping Line 182-196
-  totalEmisi_All <- rbind(totalEmisi_2016,
-                         totalEmisi_2017,
-                         totalEmisi_2018,
-                         totalEmisi_2019,
-                         totalEmisi_2020,
-                         totalEmisi_2021,
-                         totalEmisi_2022,
-                         totalEmisi_2023,
-                         totalEmisi_2024,
-                         totalEmisi_2025,
-                         totalEmisi_2026,
-                         totalEmisi_2027,
-                         totalEmisi_2028,
-                         totalEmisi_2029,
-                         totalEmisi_2030)
-  colnames(totalEmisi_All) <- "Total_Emisi"
-  totalEmisiBAU_All <- as.data.frame(row.names = 1:length(year),
-                                  cbind(year,totalEmisi_All))
+  eval(parse(text=(paste("emisi_", i, "<- as.data.frame(rowSums(tableEmisi_", year,"))", sep=""))))
+  eval(parse(text=(paste("totalEmisi_", i, "<- sum(emisi_", i, ")", sep=""))))
   
+  totalEmisiLimbahTemp_ <- list()
+  for (i in 1:length(year)){
+    eval(parse(text=paste("totalEmisiLimbahTemp_[[",i,"]] <- totalEmisi_", i, "", sep="")))
+  }
+  totalEmisiBAU_All <- as.matrix(totalEmisiLimbahTemp_)
+  colnames(totalEmisiBAU_All) <- "Total_Emisi"
+  totalEmisiBAU_All <- as.data.frame(cbind(year, totalEmisiBAU_All))
   
   library(ggplot2)
   library(plotly)
@@ -254,6 +242,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       ggplotly(plotAll_gdp)
     
     ## Tabel Satelit ##
+      i <- 1:length(year)
       sector <- ioSector$V1
       eval(parse(text=paste("intervensi",year, "<-read.table('_YK/raw/input_limbah/intervensi",year,".csv', header = TRUE, sep = ';')", sep="")))
       eval(parse(text=(paste("tableBuanganLimbah_",  year, "<-propLimbah * proyeksiBAULimbah$`", year, "`", sep=""))))
@@ -262,27 +251,17 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       # eval(parse(text=paste("tableBuanganLimbahInt_", year, "<- replace(tableBuanganLimbahInt_", year,"$Padat_3R, c(1:length(sector)) ,(tableBuanganLimbahInt_",year, "$Padat_3R + deltaBuanganLimbahTimbun_", year,"))", sep="")))
       eval(parse(text=paste("tableBuanganLimbahInt_", year,"$Padat_3R <- (tableBuanganLimbahInt_",year, "$Padat_3R + deltaBuanganLimbahTimbun_", year,")", sep="")))
       eval(parse(text=(paste("emisiLimbah_", year, "<- as.matrix(tableBuanganLimbahInt_", year, ") %*% ef_matrix", sep=""))))
-      eval(parse(text=(paste("rowTotalEmisi_", year, "<-rowSums(emisiLimbah_", year, ")", sep=""))))
-      eval(parse(text=(paste("totalEmisiLimbah_", year, "<-sum(rowTotalEmisi_", year, ")", sep=""))))
-      ## BUAT LOOPING LINE 268-282
-      totalEmisiLimbahInt_All <- rbind(totalEmisiLimbah_2016,
-                                    totalEmisiLimbah_2017,
-                                    totalEmisiLimbah_2018,
-                                    totalEmisiLimbah_2019,
-                                    totalEmisiLimbah_2020,
-                                    totalEmisiLimbah_2021,
-                                    totalEmisiLimbah_2022,
-                                    totalEmisiLimbah_2023,
-                                    totalEmisiLimbah_2024,
-                                    totalEmisiLimbah_2025,
-                                    totalEmisiLimbah_2026,
-                                    totalEmisiLimbah_2027,
-                                    totalEmisiLimbah_2028,
-                                    totalEmisiLimbah_2029,
-                                    totalEmisiLimbah_2030)
+      eval(parse(text=(paste("rowTotalEmisi_", i, "<-rowSums(emisiLimbah_", year, ")", sep=""))))
+      eval(parse(text=(paste("totalEmisiLimbah_", i, "<-sum(rowTotalEmisi_", i, ")", sep=""))))
+      
+      totalEmisiLimbahInt_ <- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("totalEmisiLimbahInt_[[",i,"]] <- totalEmisiLimbah_", i, "", sep="")))
+      }
+      totalEmisiLimbahInt_All <- as.matrix(totalEmisiLimbahInt_)
       colnames(totalEmisiLimbahInt_All) <- "Total_Emisi"
-      totalEmPadatInt_All <- data.frame(cbind(year,totalEmisiLimbahInt_All), row.names = 1:length(year))
-  
+      totalEmPadatInt_All <- as.data.frame(cbind(year, totalEmisiLimbahInt_All))
+      
       plotIntEmission <- ggplot(data=totalEmPadatInt_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
       ggplotly(plotIntEmission)
     
@@ -364,35 +343,27 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       infaktorEmisi <- read.table("_YK/raw/faktor_emisi_limbah.csv", header = TRUE, sep = ";") #USER INPUT
       F_Type <- as.data.frame(infaktorEmisi$F_Type)
       num_ef <- nrow(infaktorEmisi)
+      i <- 1:length(year)
       year_1 <- 2016:2020
       year_2 <- 2021:2030
       colnames(F_Type) <- "F_Type"
+      
       eval(parse(text=(paste("intFaktorEmisi_", year_1, "<- replace(infaktorEmisi$Em_F,c(9,10),infaktorEmisi$Em_F[9:10])", sep ="" ))))
       eval(parse(text=(paste("intFaktorEmisi_", year_2, "<- replace(infaktorEmisi$Em_F,c(9,10),((1+((", year_2, "-2020) * -0.03)) * infaktorEmisi$Em_F[9:10]))", sep ="" ))))
       eval(parse(text=(paste("efInt_", year, "<-cbind(F_Type,intFaktorEmisi_", year,")", sep="" ))))
       eval(parse(text=(paste("diagEFInt_", year, "<-diag(efInt_", year,"$intFaktorEmisi_", year, ", ncol = num_ef, nrow = num_ef)", sep=""))))
       eval(parse(text=(paste("tableBuanganLimbah_",  year, "<-propLimbah * proyeksiBAULimbah$`", year, "`", sep=""))))
       eval(parse(text=paste("tableIntEmisi_", year, "<- as.matrix(tableBuanganLimbah_", year, ") %*% diagEFInt_", year,sep= "" )))
-      eval(parse(text=paste("rowSumIntEmisi_", year, "<- rowSums(tableIntEmisi_", year, ")", sep="")))
-      eval(parse(text=paste("intTotalEmisi_", year, "<- sum(rowSumIntEmisi_", year, ")", sep="")))
-      #BUAT LOOPING LINE 379-393
-      intTotalEmisi_All <- rbind(intTotalEmisi_2016,
-                                 intTotalEmisi_2017,
-                                 intTotalEmisi_2018,
-                                 intTotalEmisi_2019,
-                                 intTotalEmisi_2020,
-                                 intTotalEmisi_2021,
-                                 intTotalEmisi_2022,
-                                 intTotalEmisi_2023,
-                                 intTotalEmisi_2024,
-                                 intTotalEmisi_2025,
-                                 intTotalEmisi_2026,
-                                 intTotalEmisi_2027,
-                                 intTotalEmisi_2028,
-                                 intTotalEmisi_2029,
-                                 intTotalEmisi_2030)
-      colnames(intTotalEmisi_All) <- "Total_Emisi"
-      totalEmCairInt_All <- data.frame(cbind(year,intTotalEmisi_All), row.names = 1:length(intTotalEmisi_All))
+      eval(parse(text=paste("rowSumIntEmisi_", i, "<- rowSums(tableIntEmisi_", year, ")", sep="")))
+      eval(parse(text=paste("intTotalEmisi_", i, "<- sum(rowSumIntEmisi_", i, ")", sep="")))
+      
+      totalEmisiLimbahInt2_ <- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("totalEmisiLimbahInt2_[[",i,"]] <- intTotalEmisi_", i, "", sep="")))
+      }
+      totalEmisiLimbahInt2_All <- as.matrix(totalEmisiLimbahInt2_)
+      colnames(totalEmisiLimbahInt2_All) <- "Total_Emisi"
+      totalEmCairInt_All <- as.data.frame(cbind(year, totalEmisiLimbahInt2_All))
       
       plotIntEmission_2 <- ggplot(data=totalEmCairInt_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
       ggplotly(plotIntEmission_2)
@@ -527,25 +498,16 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       sector <- ioSector$V1
       colnames(intPDRB_All) <- year
       PDRB_padat <- as.data.frame(cbind(sector,intPDRB_All))
+      
       #Emisi
-      ##BUAT LOOPING LINE 531-546
-      rowTotalEmisi <- as.data.frame(cbind(rowTotalEmisi_2016,
-                             rowTotalEmisi_2017,
-                             rowTotalEmisi_2018,
-                             rowTotalEmisi_2019,
-                             rowTotalEmisi_2020,
-                             rowTotalEmisi_2021,
-                             rowTotalEmisi_2022,
-                             rowTotalEmisi_2023,
-                             rowTotalEmisi_2024,
-                             rowTotalEmisi_2025,
-                             rowTotalEmisi_2026,
-                             rowTotalEmisi_2027,
-                             rowTotalEmisi_2028,
-                             rowTotalEmisi_2029,
-                             rowTotalEmisi_2030), row.names = 1:length(sector))
+      rowTotalEmisi1_<- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("rowTotalEmisi1_[[",i,"]] <- rowTotalEmisi_", i, "", sep="")))
+      }
+      rowTotalEmisi <- as.data.frame(rowTotalEmisi1_)
       colnames(rowTotalEmisi) <- year      
-      Emisi_padat <- cbind(sector, rowTotalEmisi)
+      emisi_padat <- cbind(sector, rowTotalEmisi)
+      
       #Intensitas Emisi
       inEm_padatTemp <- rowTotalEmisi/intPDRB_All
       inEm_padat <- cbind(sector, inEm_padatTemp)
@@ -555,25 +517,16 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       sector <- ioSector$V1
       colnames(intPDRBCair_All) <- year
       PDRB_cair <- as.data.frame(cbind(sector,intPDRBCair_All))
+      
       #Emisi
-      ##BUAT LOOPING LINE 559-574
-      rowSumIntEmisi <- as.data.frame(cbind(rowSumIntEmisi_2016,
-                                            rowSumIntEmisi_2017,
-                                            rowSumIntEmisi_2018,
-                                            rowSumIntEmisi_2019,
-                                            rowSumIntEmisi_2020,
-                                            rowSumIntEmisi_2021,
-                                            rowSumIntEmisi_2022,
-                                            rowSumIntEmisi_2023,
-                                            rowSumIntEmisi_2024,
-                                            rowSumIntEmisi_2025,
-                                            rowSumIntEmisi_2026,
-                                            rowSumIntEmisi_2027,
-                                            rowSumIntEmisi_2028,
-                                            rowSumIntEmisi_2029,
-                                            rowSumIntEmisi_2030), row.names = 1:length(sector))
+      rowTotalEmisi2_<- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("rowTotalEmisi2_[[",i,"]] <- rowSumIntEmisi_", i, "", sep="")))
+      }
+      rowSumIntEmisi <- as.data.frame(rowTotalEmisi2_)
       colnames(rowSumIntEmisi) <- year      
-      Emisi_cair <- cbind(sector, rowSumIntEmisi)
+      emisi_cair <- cbind(sector, rowSumIntEmisi)
+      
       #Intensitas Emisi
       inEm_cairTemp <- rowSumIntEmisi/intPDRBCair_All
       inEm_cair <- cbind(sector, inEm_cairTemp)  
@@ -581,23 +534,14 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
   ## scenario-specific dataframe of sector><simulation years depicting GDP change against BAU, emission change against BAU and emission intensity change against BAU 
     #Aksi 1
       deltaPDRB <- as.data.frame(cbind(sector,(intPDRB_All - proyeksiPDRB)))
-      ## BUAT LOOPING LINE 585-599
-      emisiBAU <- cbind(emisi_2016,
-                        emisi_2017,
-                        emisi_2018,
-                        emisi_2019,
-                        emisi_2020,
-                        emisi_2021,
-                        emisi_2022,
-                        emisi_2023,
-                        emisi_2024,
-                        emisi_2025,
-                        emisi_2026,
-                        emisi_2027,
-                        emisi_2028,
-                        emisi_2029,
-                        emisi_2030)
+      
+      emisiBAU_<- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("emisiBAU_[[",i,"]] <- emisi_", i, "", sep="")))
+      }
+      emisiBAU <- as.data.frame(emisiBAU_)
       deltaEmisi <- as.data.frame(cbind(sector, (rowTotalEmisi  - emisiBAU)))
+      
       intensitasEmBAU <- emisiBAU/proyeksiPDRB
       deltaInEm <- as.data.frame(cbind(sector, (inEm_padatTemp - intensitasEmBAU)))
     
@@ -644,7 +588,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       tableCombineOutput <- data.frame(combineOutput,
                                  stringsAsFactors = FALSE)
       tableCombineKoef <- data.frame(row.names = 1:52,
-                              Koef_Energi = wasteCoef,
+                              Koef_Limbah = wasteCoef,
                               stringsAsFactors = FALSE)
       tableCombineProyeksi <- function(tableCombineOutput,tableCombineKoef){
         for (i in 1:ncol(tableCombineOutput)){
@@ -657,26 +601,18 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       colnames(tableBuanganLimbah_combine) <- year
       tableBuanganLimbah_combine <- cbind(sector, tableBuanganLimbah_combine)
       
+      i <- 1:length(year)
       eval(parse(text=(paste("tableBuanganLimbah_combine",  year, "<-propLimbah * tableBuanganLimbah_combine$`", year, "`", sep=""))))
       eval(parse(text=(paste("tableEmisiCombine_", year, "<- as.matrix(tableBuanganLimbah_combine", year,")", "%*% input_ef_matrix", sep=""))))
-      eval(parse(text=(paste("emisiCombine_", year, "<- as.data.frame(rowSums(tableEmisiCombine_", year,"))", sep=""))))
-      eval(parse(text=paste("TotalEmisiCombine_", year, "<- sum(emisiCombine_", year, ")", sep="")))
-      ## BUAT LOOPING LINE 665-679
-      combineEmisi <- cbind (emisiCombine_2016,
-                             emisiCombine_2017,
-                             emisiCombine_2018,
-                             emisiCombine_2019,
-                             emisiCombine_2020,
-                             emisiCombine_2021,
-                             emisiCombine_2022,
-                             emisiCombine_2023,
-                             emisiCombine_2024,
-                             emisiCombine_2025,
-                             emisiCombine_2026,
-                             emisiCombine_2027,
-                             emisiCombine_2028,
-                             emisiCombine_2029,
-                             emisiCombine_2030)
+      eval(parse(text=(paste("emisiCombine_", i, "<- as.data.frame(rowSums(tableEmisiCombine_", year,"))", sep=""))))
+      eval(parse(text=paste("TotalEmisiCombine_", i, "<- sum(emisiCombine_", i, ")", sep="")))
+      
+      combineEmisi_<- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("combineEmisi_[[",i,"]] <- emisiCombine_", i, "", sep="")))
+      }
+      combineEmisi <- as.data.frame(combineEmisi_)
+      colnames(combineEmisi) <- year
       
     #Intensitas Emisi
       combineIEm <- combineEmisi/combinePDRB[,2:length(combinePDRB)]
@@ -699,24 +635,13 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       cumPDRB_combine <- cumsum(colsum_combinePDRB$Total_PDRB)
   
     #Emisi
-      ## BUAT LOOPING LINE 702-717
-      totalEmisiCombine <- rbind (TotalEmisiCombine_2016,
-                                  TotalEmisiCombine_2017,
-                                  TotalEmisiCombine_2018,
-                                  TotalEmisiCombine_2019,
-                                  TotalEmisiCombine_2020,
-                                  TotalEmisiCombine_2021,
-                                  TotalEmisiCombine_2022,
-                                  TotalEmisiCombine_2023,
-                                  TotalEmisiCombine_2024,
-                                  TotalEmisiCombine_2025,
-                                  TotalEmisiCombine_2026,
-                                  TotalEmisiCombine_2027,
-                                  TotalEmisiCombine_2028,
-                                  TotalEmisiCombine_2029,
-                                  TotalEmisiCombine_2030)
-      totalEmisiCombine <- as.data.frame(cbind(year,totalEmisiCombine), row.names = 1:length(year))
-      colnames(totalEmisiCombine) <- c("year", "Total_Emisi")
+      totalEmisiCombine_<- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("totalEmisiCombine_[[",i,"]] <- TotalEmisiCombine_", i, "", sep="")))
+      }
+      totalEmisiCombine <- as.matrix(totalEmisiCombine_)
+      colnames(totalEmisiCombine) <- "Total_Emisi"
+      totalEmisiCombine <- as.data.frame(cbind(year, totalEmisiCombine))
       cumEmisi_combine <- cumsum(totalEmisiCombine$Total_Emisi)
       
     #Intensitas Emisi
