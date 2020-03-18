@@ -373,7 +373,14 @@ tabelProyEmisi_s1 <- cbind.data.frame(year,colsumProyEmisi_s1)
 proyIntensitas_s1 <- colsumProyEmisi_s1/colProyPdrb_scen1
 tabelIntesitas_S1 <- cbind.data.frame(year,proyIntensitas_s1)
 
-
+proyEmisi <- NULL
+initial <- 2015
+for(i in 1:lengthYear){
+  eval(parse(text=paste0("proyEmisi <- cbind(proyEmisi, rowSums(proyEmisi_s1$y", initial + i,"))")))
+  # proyEmisi <- cbind(proyEmisi, rowSums(proyEmisi_s1$y2016))
+}
+proyEmisi<-cbind(as.character(sector[,1]), proyEmisi)
+colnames(proyEmisi)<-c("sector", column_year)
 
 
 
@@ -464,6 +471,19 @@ for (i in 1:lengthYear) {
     rowsumProyEmisi_s2<- cbind(rowsumProyEmisi_s2,rowSums(proyEmisi_s2[[i]]))
   }
 }
+
+
+proyEmisi <- NULL
+initial <- 2015
+for(i in 1:lengthYear){
+  eval(parse(text=paste0("proyEmisi <- cbind(proyEmisi, rowSums(proyEmisi_s2$y", initial + i,"))")))
+  # proyEmisi <- cbind(proyEmisi, rowSums(proyEmisi_s1$y2016))
+}
+proyEmisi<-cbind(as.character(sector[,1]), proyEmisi)
+colnames(proyEmisi)<-c("sector", column_year)
+
+
+
 
 #COLSUM proyeksi emisi pertanian
 colsumProyEmisi_s2 <- colSums(rowsumProyEmisi_s2)
@@ -578,6 +598,16 @@ for (i in 1:lengthYear) {
     rowsumProyEmisi_Comb<- cbind(rowsumProyEmisi_Comb,rowSums(proyEmisi_Comb[[i]]))
   }
 }
+
+
+proyEmisi <- NULL
+initial <- 2015
+for(i in 1:lengthYear){
+  eval(parse(text=paste0("proyEmisi <- cbind(proyEmisi, rowSums(proyEmisi_Comb$y", initial + i,"))")))
+  # proyEmisi <- cbind(proyEmisi, rowSums(proyEmisi_s1$y2016))
+}
+proyEmisi<-cbind(as.character(sector[,1]), proyEmisi)
+colnames(proyEmisi)<-c("sector", column_year)
 
 
 #COLSUM proyeksi emisi pertanian
