@@ -64,143 +64,146 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
 
 ### SKENARIO BAU ####
 
-  ## Tabel GDP Rate ##
-  sector <- ioSector$V1
-  inputGDPRate <- 0.05
-  year <- 2016 : 2030
-  for (i in 1:length(year)){
-    gdpRateTable <- matrix(inputGDPRate,ncol = length(year), nrow = length(sector))
-    gdpRateTable <- as.data.frame(gdpRateTable)
-    colnames(gdpRateTable) <- year
-    gdpRateTable <- cbind(sector, gdpRateTable)
-  }
-  
-  ## Tabel Proyeksi Final Demand ##
-  
-  totalFDbau <- data.frame(rowSums(ioFinalDemand))
-  colnames(totalFDbau) <- "FD_BAU"
-  # totalFDbau <- cbind(sector, totalFDbau)
-  
-  gdpRateTable<-data.frame(gdpRateTable[,2:length(gdpRateTable)],
-                           stringsAsFactors = FALSE)
-  
-  proyeksi_FD <- function(gdpRateTable, totalFDbau) {
-    for (i in 1:ncol(gdpRateTable)){
-      if (i==1){
-        gdpRateTable[,i] <-  (1+gdpRateTable[,i]) * totalFDbau
-      } else {
-        gdpRateTable[,i] <-  gdpRateTable[,i-1] * (1+gdpRateTable[,i])
-      }
-    }
-    return(gdpRateTable)
-  }
-  
-  proyeksiFD_t <- proyeksi_FD(gdpRateTable, totalFDbau)
-  proyeksiFD_t <- data.frame(proyeksiFD_t)
-  proyeksiFD_t <- cbind(sector, proyeksiFD_t)
-  
-  ## Tabel Proyeksi Output ##
-  
-  proyeksiFD_matrix <- as.matrix(proyeksiFD_t [,2:length(proyeksiFD_t)])
-  proyeksiOutput_t <- ioLeontiefInverse %*% proyeksiFD_matrix
-  sector <- as.data.frame(ioSector$V1)
-  proyeksiOutput_t <- as.data.frame(cbind(sector,proyeksiOutput_t))
-  
-  ## Tabel Proyeksi PDRB ##
-  
-  proyeksiPDRB <- GDPAll$P_OUTPUT * (proyeksiOutput_t[,2:length(proyeksiOutput_t)])
-  colsumPDRBbau<-as.data.frame(colSums(proyeksiPDRB))
-  colnames(colsumPDRBbau) <- "Total_PDRB"
-  totalPDRBbau <- as.data.frame(cbind(year,colsumPDRBbau), row.names = 1:length(year))
-  
-  ## Proyeksi BAU Buangan Limbah ##
-  
-  # inProyeksiOutput <- "raw/proyeksi_output_jabar.csv"
-  # proyeksiOutput <- read.table(inProyeksiOutput, header = TRUE, sep = ";")
-  tablePOutput <- data.frame(proyeksiOutput_t[,2:length(proyeksiOutput_t)],
-                             stringsAsFactors = FALSE)
-  tableKoef <- data.frame(row.names = 1:52,
-                          Koef_Limbah = wasteCoef,
-                          stringsAsFactors = FALSE)
-  tableProyeksi <- function(tablePOutput,tableKoef){
-    for (i in 1:ncol(tablePOutput)){
-      tablePOutput[,i] <- tableKoef*(tablePOutput[,i])
-    }    
-    return(tablePOutput)
-  }
-  tableProyeksiLimbah <- tableProyeksi(tablePOutput,tableKoef)
-  year <- 2016:2030
-  colnames(tableProyeksiLimbah) <- year
-  sector <- ioSector$V1
-  proyeksiBAULimbah <- cbind(sector, tableProyeksiLimbah)
-  
-  ## Proporsi Satelit Limbah ##
-  
-  tablePropLimbah <-satelliteWaste[,4:length(satelliteWaste)]/satelliteWaste$Total 
-  tablePropLimbah <- replace(tablePropLimbah, is.na(tablePropLimbah), 0)
-  sector <- as.data.frame(ioSector$V1)
-  tablePropLimbah <- cbind(sector, tablePropLimbah)
-  # tablePropLimbah <- read.table("raw/satelit_limbah.csv", header = TRUE, sep = ";")
-  
-  ## Tabel Proyeksi Buangan Limbah Tahun X ##
-  
-  propLimbah <- data.frame(tablePropLimbah[2:length(tablePropLimbah)],
-                           stringsAsFactors = FALSE)
-  #Contoh : Tabel Proyeksi Buangan Limbah Tahun 2017
-  ## Buat tampilan di SHINY line 151 - 172
-  totalBuangan_t <- data.frame(proyeksiBAULimbah$`2017`,
-                               stringsAsFactors = FALSE)
-  tableBuanganLimbah <- function(propLimbah, totalBuangan_t){
-    for (i in 1:ncol(propLimbah)){
-      propLimbah[,i] <- propLimbah[,i] * (totalBuangan_t)
-    }
-    return(propLimbah)
-  }
-  tableBuanganLimbah_t <- tableBuanganLimbah(propLimbah, totalBuangan_t)
-  totalBuanganSektor_t <- rowSums(tableBuanganLimbah_t)
-  totalBuanganLimbah_t <- sum(totalBuanganSektor_t)
+    ## Tabel GDP Rate ##
 
-  ## Tabel Proyeksi Emisi Limbah Tahun X ##
-  
-  #Contoh : Tabel Proyeksi Emisi Limbah Tahun 2017
-  infaktorEmisi <- read.table("_YK/raw/11_faktor_emisi_limbah.csv", header = TRUE, sep = ",")
-  num_input_ef <- length(infaktorEmisi$Em_F)
-  input_ef_matrix <- diag(as.vector(infaktorEmisi$Em_F), ncol = num_input_ef, nrow = num_input_ef)
-  tableEmisi <- as.matrix(tableBuanganLimbah_t) %*% input_ef_matrix
-  emisi_t <- as.data.frame(rowSums(tableEmisi))
-  colnames(emisi_t) <- "Total Emisi"
-  totalEmisi_t <- sum(emisi_t)
-  
-  ## Membuat tabel "Total Buangan dan Faktor Emisi" tahun awal-akhir ##
-  
-  i <- 1:length(year)
-  eval(parse(text=(paste("tableBuanganLimbahAll_",  year, "<-propLimbah * proyeksiBAULimbah$`", year, "`", sep=""))))
-  eval(parse(text=(paste("tableEmisi_", year, "<- as.matrix(tableBuanganLimbahAll_", year,")", "%*% input_ef_matrix", sep=""))))
-  eval(parse(text=(paste("emisi_", i, "<- as.data.frame(rowSums(tableEmisi_", year,"))", sep=""))))
-  eval(parse(text=(paste("totalEmisi_", i, "<- sum(emisi_", i, ")", sep=""))))
-  
-  totalEmisiLimbahTemp_ <- list()
-  for (i in 1:length(year)){
-    eval(parse(text=paste("totalEmisiLimbahTemp_[[",i,"]] <- totalEmisi_", i, "", sep="")))
-  }
-  totalEmisiBAU_All <- as.matrix(totalEmisiLimbahTemp_)
-  colnames(totalEmisiBAU_All) <- "Total_Emisi"
-  totalEmisiBAU_All <- as.data.frame(cbind(year, totalEmisiBAU_All))
-  
-  library(ggplot2)
-  library(plotly)
-  
-  ## Grafik Proyeksi Total Buangan Limbah ##
-  
-  graphWaste <- colSums(proyeksiBAULimbah[,2:length(proyeksiBAULimbah)])
-  graphWaste <- as.data.frame(cbind(year,graphWaste), row.names = 1:length(year))
-  plotWaste<- ggplot(data=graphWaste, aes(x=year, y=graphWaste, group=1)) + geom_line() + geom_point()
-  ggplotly(plotWaste)
-  
-  ## Grafik Proyeksi Total Emisi Buangan Limbah ##
-  
-  plotEmission <- ggplot(data=totalEmisiBAU_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
-  ggplotly(plotEmission)
+      sector <- ioSector$V1
+      inputGDPRate <- 0.05
+      year <- 2016 : 2030
+      for (i in 1:length(year)){
+        gdpRateTable <- matrix(inputGDPRate,ncol = length(year), nrow = length(sector))
+        gdpRateTable <- as.data.frame(gdpRateTable)
+        colnames(gdpRateTable) <- year
+        gdpRateTable <- cbind(sector, gdpRateTable)
+      }
+      
+    ## Tabel Proyeksi Final Demand ##
+      
+      totalFDbau <- data.frame(rowSums(ioFinalDemand))
+      colnames(totalFDbau) <- "FD_BAU"
+      # totalFDbau <- cbind(sector, totalFDbau)
+      
+      gdpRateTable<-data.frame(gdpRateTable[,2:length(gdpRateTable)],
+                               stringsAsFactors = FALSE)
+      
+      proyeksi_FD <- function(gdpRateTable, totalFDbau) {
+        for (i in 1:ncol(gdpRateTable)){
+          if (i==1){
+            gdpRateTable[,i] <-  (1+gdpRateTable[,i]) * totalFDbau
+          } else {
+            gdpRateTable[,i] <-  gdpRateTable[,i-1] * (1+gdpRateTable[,i])
+          }
+        }
+        return(gdpRateTable)
+      }
+      
+      proyeksiFD_t <- proyeksi_FD(gdpRateTable, totalFDbau)
+      proyeksiFD_t <- data.frame(proyeksiFD_t)
+      proyeksiFD_t <- cbind(sector, proyeksiFD_t)
+      
+    ## Tabel Proyeksi Output ##
+      
+      proyeksiFD_matrix <- as.matrix(proyeksiFD_t [,2:length(proyeksiFD_t)])
+      proyeksiOutput_t <- ioLeontiefInverse %*% proyeksiFD_matrix
+      sector <- as.data.frame(ioSector$V1)
+      proyeksiOutput_t <- as.data.frame(cbind(sector,proyeksiOutput_t))
+      
+    ## Tabel Proyeksi PDRB ##
+      
+      proyeksiPDRB <- GDPAll$P_OUTPUT * (proyeksiOutput_t[,2:length(proyeksiOutput_t)])
+      colsumPDRBbau<-as.data.frame(colSums(proyeksiPDRB))
+      colnames(colsumPDRBbau) <- "Total_PDRB"
+      totalPDRBbau <- as.data.frame(cbind(year,colsumPDRBbau), row.names = 1:length(year))
+      
+    ## Proyeksi BAU Buangan Limbah ##
+      
+      # inProyeksiOutput <- "raw/proyeksi_output_jabar.csv"
+      # proyeksiOutput <- read.table(inProyeksiOutput, header = TRUE, sep = ";")
+      tablePOutput <- data.frame(proyeksiOutput_t[,2:length(proyeksiOutput_t)],
+                                 stringsAsFactors = FALSE)
+      tableKoef <- data.frame(row.names = 1:52,
+                              Koef_Limbah = wasteCoef,
+                              stringsAsFactors = FALSE)
+      tableProyeksi <- function(tablePOutput,tableKoef){
+        for (i in 1:ncol(tablePOutput)){
+          tablePOutput[,i] <- tableKoef*(tablePOutput[,i])
+        }    
+        return(tablePOutput)
+      }
+      tableProyeksiLimbah <- tableProyeksi(tablePOutput,tableKoef)
+      year <- 2016:2030
+      colnames(tableProyeksiLimbah) <- year
+      sector <- ioSector$V1
+      proyeksiBAULimbah <- cbind(sector, tableProyeksiLimbah)
+      
+    ## Proporsi Satelit Limbah ##
+      
+      tablePropLimbah <-satelliteWaste[,4:length(satelliteWaste)]/satelliteWaste$Total 
+      tablePropLimbah <- replace(tablePropLimbah, is.na(tablePropLimbah), 0)
+      sector <- as.data.frame(ioSector$V1)
+      tablePropLimbah <- cbind(sector, tablePropLimbah)
+      # tablePropLimbah <- read.table("raw/satelit_limbah.csv", header = TRUE, sep = ";")
+      
+    ## Tabel Proyeksi Buangan Limbah Tahun X ##
+      
+      propLimbah <- data.frame(tablePropLimbah[2:length(tablePropLimbah)],
+                               stringsAsFactors = FALSE)
+      #Contoh : Tabel Proyeksi Buangan Limbah Tahun 2017
+      #Buat tampilan di SHINY line 151 - 172
+      totalBuangan_t <- data.frame(proyeksiBAULimbah$`2017`,
+                                   stringsAsFactors = FALSE)
+      tableBuanganLimbah <- function(propLimbah, totalBuangan_t){
+        for (i in 1:ncol(propLimbah)){
+          propLimbah[,i] <- propLimbah[,i] * (totalBuangan_t)
+        }
+        return(propLimbah)
+      }
+      tableBuanganLimbah_t <- tableBuanganLimbah(propLimbah, totalBuangan_t)
+      totalBuanganSektor_t <- rowSums(tableBuanganLimbah_t)
+      totalBuanganLimbah_t <- sum(totalBuanganSektor_t)
+    
+    ## Tabel Proyeksi Emisi Limbah Tahun X ##
+      
+      #Contoh : Tabel Proyeksi Emisi Limbah Tahun 2017
+      infaktorEmisi <- read.table("_YK/raw/11_faktor_emisi_limbah.csv", header = TRUE, sep = ",")
+      num_input_ef <- length(infaktorEmisi$Em_F)
+      input_ef_matrix <- diag(as.vector(infaktorEmisi$Em_F), ncol = num_input_ef, nrow = num_input_ef)
+      tableEmisi <- as.matrix(tableBuanganLimbah_t) %*% input_ef_matrix
+      emisi_t <- as.data.frame(rowSums(tableEmisi))
+      colnames(emisi_t) <- "Total Emisi"
+      totalEmisi_t <- sum(emisi_t)
+      
+    ## Membuat tabel "Total Buangan dan Faktor Emisi" tahun awal-akhir ##
+      
+      i <- 1:length(year)
+      eval(parse(text=(paste("tableBuanganLimbahAll_",  year, "<-propLimbah * proyeksiBAULimbah$`", year, "`", sep=""))))
+      eval(parse(text=(paste("tableEmisi_", year, "<- as.matrix(tableBuanganLimbahAll_", year,")", "%*% input_ef_matrix", sep=""))))
+      eval(parse(text=(paste("emisi_", i, "<- as.data.frame(rowSums(tableEmisi_", year,"))", sep=""))))
+      eval(parse(text=(paste("totalEmisi_", i, "<- sum(emisi_", i, ")", sep=""))))
+      
+      totalEmisiLimbahTemp_ <- list()
+      for (i in 1:length(year)){
+        eval(parse(text=paste("totalEmisiLimbahTemp_[[",i,"]] <- totalEmisi_", i, "", sep="")))
+      }
+      totalEmisiBAU_All <- as.matrix(totalEmisiLimbahTemp_)
+      colnames(totalEmisiBAU_All) <- "Total_Emisi"
+      totalEmisiBAU_All <- as.data.frame(cbind(year, totalEmisiBAU_All), row.names = 1:length(year))
+      totalEmisiBAU_All$Total_Emisi <- as.numeric(totalEmisiBAU_All$Total_Emisi)
+      totalEmisiBAU_All$year <- as.numeric(totalEmisiBAU_All$year)
+      
+      library(ggplot2)
+      library(plotly)
+      
+    ## Grafik Proyeksi Total Buangan Limbah ##
+      
+      graphWaste <- colSums(proyeksiBAULimbah[,2:length(proyeksiBAULimbah)])
+      graphWaste <- as.data.frame(cbind(year,graphWaste), row.names = 1:length(year))
+      plotWaste<- ggplot(data=graphWaste, aes(x=year, y=graphWaste, group=1)) + geom_line() + geom_point()
+      ggplotly(plotWaste)
+      
+    ## Grafik Proyeksi Total Emisi Buangan Limbah ##
+      
+      plotEmission <- ggplot(data=totalEmisiBAU_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
+      ggplotly(plotEmission)
 
 
 ### SKENARIO AKSI ####  
@@ -222,7 +225,8 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       colnames(int_colsumPDRB) <- "Total_PDRB"
       int_totalPDRBpadat <- as.data.frame(cbind(year, int_colsumPDRB), row.names = 1:length(year))
     
-    # Grafik perbandingan intervensi dan BAU PDRB
+      #Grafik perbandingan intervensi dan BAU PDRB
+      
       gdpBAU <- totalPDRBbau
       gdpInv <- int_totalPDRBpadat
       
@@ -242,6 +246,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       ggplotly(plotAll_gdp)
     
     ## Tabel Satelit ##
+      
       i <- 1:length(year)
       sector <- ioSector$V1
       eval(parse(text=paste("intervensi",year, "<-read.table('_YK/raw/input_limbah/intervensi",year,".csv', header = TRUE, sep = ';')", sep="")))
@@ -260,12 +265,15 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       }
       totalEmisiLimbahInt_All <- as.matrix(totalEmisiLimbahInt_)
       colnames(totalEmisiLimbahInt_All) <- "Total_Emisi"
-      totalEmPadatInt_All <- as.data.frame(cbind(year, totalEmisiLimbahInt_All))
+      totalEmPadatInt_All <- as.data.frame(cbind(year, totalEmisiLimbahInt_All),row.names = 1:length(year))
+      totalEmPadatInt_All$year <- as.numeric(totalEmPadatInt_All$year)
+      totalEmPadatInt_All$Total_Emisi <- as.numeric(totalEmPadatInt_All$Total_Emisi)
       
       plotIntEmission <- ggplot(data=totalEmPadatInt_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
       ggplotly(plotIntEmission)
     
-    # Grafik perbandingan intervensi dan BAU Emisi
+      #Grafik perbandingan intervensi dan BAU Emisi
+      
       emissionBAU <- totalEmisiBAU_All
       emissionInv <- totalEmPadatInt_All
       
@@ -285,11 +293,13 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       ggplotly(plotAll_emisi)
       
     ## Intensitas Emisi ##
+      
        intensistasEmPadat <-totalEmPadatInt_All$Total_Emisi/int_totalPDRBpadat$Total_PDRB
        intensistasEmPadat <-as.data.frame(cbind(year,intensistasEmPadat), row.names = 1:length(year))
        colnames(intensistasEmPadat) <- c("year","Intensitas_Emisi")
        
-       # Grafik perbandingan intervensi dan BAU Intesitas Emisi
+       #Grafik perbandingan intervensi dan BAU Intesitas Emisi
+       
        # iEmisiBAU <- intensistasEmBAU
        iEmisiInv <- intensistasEmPadat
        
@@ -304,7 +314,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
        plotAll_IEm<-ggplot(cumSumInv_IEm, aes(x=year, y=Intensitas_Emisi, group=Scenario)) +
          geom_line(aes(color=Scenario))+
          geom_point(aes(color=Scenario))+
-         labs(x = "Tahun", y = "Emisi")+
+         labs(x = "Tahun", y = "Intensitas Emisi")+
          ggtitle("Grafik Intensitas Emisi")
        ggplotly(plotAll_IEm)
     
@@ -320,7 +330,8 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       colnames(int_colsumPDRBCair) <- "Total_PDRB"
       int_totalPDRBCair <- as.data.frame(cbind(year, int_colsumPDRBCair), row.names = 1:length(year))
       
-      # Grafik perbandingan intervensi dan BAU PDRB
+      #Grafik perbandingan intervensi dan BAU PDRB
+      
       gdpBAU_2 <- totalPDRBbau
       gdpInv_2 <- int_totalPDRBCair
       
@@ -340,6 +351,7 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       ggplotly(plotAll_gdp2)
     
     ## Tabel Satelit ##
+      
       infaktorEmisi <- read.table("_YK/raw/faktor_emisi_limbah.csv", header = TRUE, sep = ";") #USER INPUT
       F_Type <- as.data.frame(infaktorEmisi$F_Type)
       num_ef <- nrow(infaktorEmisi)
@@ -364,11 +376,14 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       totalEmisiLimbahInt2_All <- as.matrix(totalEmisiLimbahInt2_)
       colnames(totalEmisiLimbahInt2_All) <- "Total_Emisi"
       totalEmCairInt_All <- as.data.frame(cbind(year, totalEmisiLimbahInt2_All))
+      totalEmCairInt_All$year <- as.numeric(totalEmCairInt_All$year)
+      totalEmCairInt_All$Total_Emisi <- as.numeric(totalEmCairInt_All$Total_Emisi)
       
       plotIntEmission_2 <- ggplot(data=totalEmCairInt_All, aes(x=year, y=Total_Emisi, group=1)) + geom_line() + geom_point()
       ggplotly(plotIntEmission_2)
       
-      # Grafik perbandingan intervensi dan BAU Emisi
+      #Grafik perbandingan intervensi dan BAU Emisi
+      
       emissionBAU_2 <- totalEmisiBAU_All
       emissionInv_2 <- totalEmCairInt_All
       
@@ -388,11 +403,13 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       ggplotly(plotAll_2)
     
     ## Intensitas Emisi ##
+      
       intensistasEmCair <-as.data.frame(totalEmCairInt_All$Total_Emisi/int_totalPDRBCair$Total_PDRB)
       intensistasEmCair <-as.data.frame(cbind(year,intensistasEmCair), row.names = 1:length(year))
       colnames(intensistasEmCair) <- c("year","Intensitas_Emisi")
       
-      # Grafik perbandingan intervensi dan BAU Intesitas Emisi
+      #Grafik perbandingan intervensi dan BAU Intesitas Emisi
+      
       # iEmisiBAU <- intensistasEmBAU
       iEmisiInv_2 <- intensistasEmCair
       
@@ -407,13 +424,14 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       plotAll_IEm2<-ggplot(cumSumInv_IEm2, aes(x=year, y=Intensitas_Emisi, group=Scenario)) +
         geom_line(aes(color=Scenario))+
         geom_point(aes(color=Scenario))+
-        labs(x = "Tahun", y = "Emisi")+
+        labs(x = "Tahun", y = "Intensitas Emisi")+
         ggtitle("Grafik Intensitas Emisi")
       ggplotly(plotAll_IEm2)
 
       
 ### OUTPUT GRAFIK ####
-      ## Grafik PDRB ##
+    ## Grafik PDRB ##
+      
       pdrbBAU <- totalPDRBbau
       pdrbAksi1 <- int_totalPDRBpadat
       pdrbAksi2 <- int_totalPDRBCair
@@ -435,7 +453,8 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
         ggtitle("Grafik Proyeksi PDRB")
       ggplotly(plotPDRB_All)
       
-      ## Grafik Emisi ##
+    ## Grafik Emisi ##
+      
       emBAU <- totalEmisiBAU_All
       emAksi1 <- totalEmPadatInt_All
       emAksi2 <- totalEmCairInt_All
@@ -457,7 +476,8 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
         ggtitle("Grafik Proyeksi Emisi")
       ggplotly(plotEmisi_All)
       
-      ## Grafik Intensitas Emisi ##
+    ## Grafik Intensitas Emisi ##
+      
       iEmAksi1 <- intensistasEmPadat
       iEmAksi2 <- intensistasEmCair
       
@@ -476,7 +496,8 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
         ggtitle("Grafik Intensitas Emisi")
       ggplotly(plotIntensitasEm_All)
       
-      ## Bar Chart di Tahun 2030 ##
+    ## Bar Chart di Tahun 2030 ##
+      
       tblPDRB_t <- filter(tblPDRB_All, year=="2030")
       barPDRB <- ggplot(tblPDRB_t, (aes(x=Scenario, y=Total_PDRB))) + geom_bar(stat="identity")
       ggplotly(barPDRB)
@@ -584,7 +605,6 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       combinePDRB <- as.data.frame(cbind(sector, combinePDRB))
       
     #Emisi
-      
       tableCombineOutput <- data.frame(combineOutput,
                                  stringsAsFactors = FALSE)
       tableCombineKoef <- data.frame(row.names = 1:52,
@@ -630,7 +650,6 @@ ef_waste_matrix <- as.matrix(satelliteWaste[,4:19]) %*% ef_matrix
       deltaInEm_combine <- as.data.frame(cbind(sector, (combineIEm - intensitasEmBAU)))
       
   ## scenario-specific dataframe at t15 depicting cumulative emission reduction, GDP change and emission intensity change 
-      
     #PDRB
       cumPDRB_combine <- cumsum(colsum_combinePDRB$Total_PDRB)
   

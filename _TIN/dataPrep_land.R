@@ -9,7 +9,7 @@
 
 landScen1_findem <-read.csv("_TIN/landCalc/landScen1_findem.csv", header = FALSE)
 landScen1_inputLandCover<-read.csv("_TIN/landCalc/landScen1_inputLandCover.csv", header=FALSE)
-landScen1_tpm_template<-read.csv("_TIN/landCalc/landScen1_tpm_template.csv", header=TRUE)
+landScen1_LUTM_template<-read.csv("_TIN/landCalc/landScen1_tpm_template.csv", header=TRUE)
 
 ### make additional constraint for matrix E & matrix F
 # perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
@@ -26,7 +26,7 @@ for (i in 1:ncol(landScen1_findem)){
   }
 }
 
-landScen1_tpmChange<-NULL
+landScen1_LUTMChange<-NULL
 
 
 
@@ -36,7 +36,7 @@ landScen1_tpmChange<-NULL
 # intervensi di TPM, perubahan lahan kritis -> kebun campur sebesar 5713 Ha disebar merata tiap tahun
 landScen2_findem <-read.csv("_TIN/landCalc/landScen2_findem.csv", header = FALSE)
 landScen2_inputLandCover<-read.csv("_TIN/landCalc/landScen2_inputLandCover.csv", header=FALSE)
-landScen2_tpm_template<-read.csv("_TIN/landCalc/tpm_template.csv", header=TRUE)
+landScen2_LUTM_template<-read.csv("_TIN/landCalc/LUTM_template.csv", header=TRUE)
 
 ### make additional constraint for matrix E & matrix F
 # perubahan semak menjadi pertanian lahan kering campur sebanyak 0.23148209*5713/15= X56 = 0.23148209*5713/15
@@ -52,39 +52,39 @@ for(i in 1:ncol(landScen2_findem)){
     landScen2_additionalF[[i]]<-matrix(c((0.23148209*5713/15)+variabel_lsei[[i]][56,1], (0.76851791*5713/15)+variabel_lsei[[i]][61,1]), nrow=2, ncol=1)
   }
 }
-landScen2_tpmChange<-NULL
+landScen2_LUTMChange<-NULL
 
 ####################################### SKENARIO 3 ##############################################################
 # Mengurangi perubahan lahan hutan menjadi lahan kritis
 landScen3_findem<-read.csv("_TIN/landCalc/landScen3_findem.csv", header = FALSE)
 landScen3_inputLandCover<-matrix(0,nrow=23, ncol=16)
-landScen3_tpm_template<-read.csv("_TIN/landCalc/tpm_template.csv", header=TRUE)
+landScen3_LUTM_template<-read.csv("_TIN/landCalc/LUTM_template.csv", header=TRUE)
 
-### change landScen_tpm
+### change landScen_LUTM
 
 landScen3_additionalE<-NULL
 landScen3_additionalF<-NULL
 
-landScen3_tpmRule<-read.csv("_TIN/landCalc/landScen3_tpmRule.csv", header = TRUE)
-landScen3_tpmChange<-list()
+landScen3_LUTMRule<-read.csv("_TIN/landCalc/landScen3_tpmRule.csv", header = TRUE)
+landScen3_LUTMChange<-list()
 
-for (i in 1:length(tpm)){
-  class(tpm[[i]])<-"numeric"
+for (i in 1:length(LUTM)){
+  class(LUTM[[i]])<-"numeric"
   if (i==1){
-    landScen3_tpmChange[[i]]<-matrix(0, nrow=nrow(tpm[[i]]), ncol=ncol(tpm[[i]]) )
+    landScen3_LUTMChange[[i]]<-matrix(0, nrow=nrow(LUTM[[i]]), ncol=ncol(LUTM[[i]]) )
   } else{
-    landScen3_tpmChange[[i]]<-as.matrix(landScen3_tpmRule * tpm[[i]]*-1)
-    landScen3_tpmChange[[i]][1,1]<--sum(landScen3_tpmChange[[i]][1,])
-    landScen3_tpmChange[[i]][2,2]<--sum(landScen3_tpmChange[[i]][2,])
-    landScen3_tpmChange[[i]][5,5]<--sum(landScen3_tpmChange[[i]][5,])
-    landScen3_tpmChange[[i]][6,6]<--sum(landScen3_tpmChange[[i]][6,])
+    landScen3_LUTMChange[[i]]<-as.matrix(landScen3_LUTMRule * LUTM[[i]]*-1)
+    landScen3_LUTMChange[[i]][1,1]<--sum(landScen3_LUTMChange[[i]][1,])
+    landScen3_LUTMChange[[i]][2,2]<--sum(landScen3_LUTMChange[[i]][2,])
+    landScen3_LUTMChange[[i]][5,5]<--sum(landScen3_LUTMChange[[i]][5,])
+    landScen3_LUTMChange[[i]][6,6]<--sum(landScen3_LUTMChange[[i]][6,])
   }
 }
 
 ######################### combination of scenario 1 & 2 ##############################
 landScen4_findem <-landScen1_findem+landScen2_findem
 landScen4_inputLandCover<-landScen1_inputLandCover+landScen2_inputLandCover
-landScen4_tpm_template<-landScen1_tpm_template
+landScen4_LUTM_template<-landScen1_LUTM_template
 
 ### make additional constraint for matrix E & matrix F
 # perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
@@ -104,12 +104,12 @@ for (i in 1:ncol(landScen1_findem)){
   }
 }
 
-landScen4_tpmChange<-NULL
+landScen4_LUTMChange<-NULL
 
 ######################### combination of scenario 1 & 3 ##############################
 landScen5_findem <-landScen1_findem+landScen3_findem
 landScen5_inputLandCover<-landScen1_inputLandCover+landScen3_inputLandCover
-landScen5_tpm_template<-landScen1_tpm_template
+landScen5_LUTM_template<-landScen1_LUTM_template
 
 ### make additional constraint for matrix E & matrix F
 # perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
@@ -125,12 +125,12 @@ for (i in 1:ncol(landScen5_findem)){
   }
 }
 
-landScen5_tpmChange<-landScen3_tpmChange
+landScen5_LUTMChange<-landScen3_LUTMChange
 
 ######################### combination of scenario 2 & 3 ##############################
 landScen6_findem <-landScen2_findem+landScen3_findem
 landScen6_inputLandCover<-landScen2_inputLandCover+landScen3_inputLandCover
-landScen6_tpm_template<-landScen2_tpm_template
+landScen6_LUTM_template<-landScen2_LUTM_template
 
 ### make additional constraint for matrix E & matrix F
 # perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
@@ -146,13 +146,13 @@ for (i in 1:ncol(landScen6_findem)){
   }
 }
 
-landScen6_tpmChange<-landScen3_tpmChange
+landScen6_LUTMChange<-landScen3_LUTMChange
 
 
 ######################### combination of scenario 1, 2 & 3 ##############################
 landScen7_findem <-landScen1_findem+landScen2_findem+landScen3_findem
 landScen7_inputLandCover<-landScen1_inputLandCover+landScen2_inputLandCover+landScen3_inputLandCover
-landScen7_tpm_template<-landScen1_tpm_template
+landScen7_LUTM_template<-landScen1_LUTM_template
 
 ### make additional constraint for matrix E & matrix F
 # perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
@@ -172,4 +172,33 @@ for (i in 1:ncol(landScen7_findem)){
   }
 }
 
-landScen7_tpmChange<-landScen3_tpmChange
+landScen7_LUTMChange<-landScen3_LUTMChange
+
+
+
+################################ skenario CPO mba Dewi ############################################
+landScen8_findem <-landScen1_findem+landScen2_findem+landScen3_findem+as.matrix(read.csv("_TIN/landCalc/landScen8_findem.csv", header = TRUE))
+landScen8_inputLandCover<-landScen1_inputLandCover+landScen2_inputLandCover+landScen3_inputLandCover
+landScen8_LUTM_template<-landScen1_LUTM_template
+
+### make additional constraint for matrix E & matrix F
+# perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
+# perubahan lahan terbuka menjadi hutan sekunder 0.76851791*2344/15 = X7 = 0.76851791*2344/15
+landScen8_additionalE<-matrix(0, nrow=4,ncol=131)   #131= jumlahvariabel
+landScen8_additionalE[1,5]<-1  #for x5
+landScen8_additionalE[2,7]<-1  #for x7
+landScen8_additionalE[3,57]<-1  #for x57
+landScen8_additionalE[4,62]<-1  #for X62
+
+landScen8_additionalF<-list()
+for (i in 1:ncol(landScen8_findem)){
+  if (i==1){
+    landScen8_additionalF[[i]]<-matrix(0, nrow=4, ncol=1)
+  }else{
+    landScen8_additionalF[[i]]<-rbind(landScen1_additionalF[[i]],landScen2_additionalF[[i]])
+  }
+}
+
+landScen8_LUTMChange<-landScen3_LUTMChange
+
+
