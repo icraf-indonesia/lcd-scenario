@@ -1,13 +1,13 @@
 #set wd di laptop dw
 #setwd("C:/dw/ICRAF/redcluew/syntax/lcd-scenario")
-pathcsv <- ("C:/dw/ICRAF/redcluew/syntax/lcd-scenario/_DB")
 
 ###BEGIN: initiate all variables ####
 # username <- "alfanugraha"
 # password <- "1234"
 selectedProv = "JaBar"
 datapath <- paste0("data/", selectedProv, "/")
-datapathCSV <- pathcsv
+datapathCSV <- ("C:/dw/ICRAF/redcluew/syntax/lcd-scenario/_DB/input csv")
+datapaths1s2 <- ("C:/dw/ICRAF/redcluew/syntax/lcd-scenario/_DB")
 
 
 ioSector <- readRDS(paste0(datapath, "sector"))
@@ -40,22 +40,22 @@ inPersentaseBahanBAkarSken2 <- paste0(datapathCSV, "/18_persentase_bahan_bakar_s
 inDiesel2016 <- paste0(datapathCSV, "/19_konsumsi_diesel_2016_sken2_f.csv")
 
 #gabungan skenario 1 dan 2
-inFDS1S2 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/20_s1s2_FD.csv")
-inKonsS1S22016 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2016.csv")
-inKonsS1S22017 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2017.csv")
-inKonsS1S22018 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2018.csv")
-inKonsS1S22019 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2019.csv")
-inKonsS1S22020 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2020.csv")
-inKonsS1S22021 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2021.csv")
-inKonsS1S22022 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2022.csv")
-inKonsS1S22023 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2023.csv")
-inKonsS1S22024 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2024.csv")
-inKonsS1S22025 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2025.csv")
-inKonsS1S22026 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2026.csv")
-inKonsS1S22027 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2027.csv")
-inKonsS1S22028 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2028.csv")
-inKonsS1S22029 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2029.csv")
-inKonsS1S22030 <- paste0(datapathCSV, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2030.csv")
+inFDS1S2 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/20_s1s2_FD.csv")
+inKonsS1S22016 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2016.csv")
+inKonsS1S22017 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2017.csv")
+inKonsS1S22018 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2018.csv")
+inKonsS1S22019 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2019.csv")
+inKonsS1S22020 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2020.csv")
+inKonsS1S22021 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2021.csv")
+inKonsS1S22022 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2022.csv")
+inKonsS1S22023 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2023.csv")
+inKonsS1S22024 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2024.csv")
+inKonsS1S22025 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2025.csv")
+inKonsS1S22026 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2026.csv")
+inKonsS1S22027 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2027.csv")
+inKonsS1S22028 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2028.csv")
+inKonsS1S22029 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2029.csv")
+inKonsS1S22030 <- paste0(datapaths1s2, "/csv gabungan sken 1 dan sken 2/21_s1s2_konsumsi_energi_2030.csv")
 
 
 #indemScen1 <- read.table(inIntermediateDemand, header=F, sep=",")
@@ -98,7 +98,7 @@ yearTo <- 2030 #user input
 
 
 # BAU ---------------------------------------------------------------------
-ioIntermediateDemand
+ioIntermediateDemand #user input
 energyBau <- satelliteEnergy
 efBau <- emissionFactorEnergy
 
@@ -632,6 +632,15 @@ deltaEmisiS1S2 <- as.data.frame(colsumProyEmisiS1S2 - colsumProyEmisi)
 #                            save data to rds file                             #
 #                                                                              #
 ################################################################################
+#BAU
+saveRDS(fdAllYear,"_DB/save rds file/fdAllYearBAU.rds") #FD
+saveRDS(proyPdrb,"_DB/save rds file/proyPdrbBAU.rds") #PDRB
+saveRDS(proyTabelKonsEnergi,"_DB/save rds file/proyTabelKonsEnergiBAU.rds") #PROYEKSI  KONSUMSI 
+saveRDS(proyEmisi,"_DB/save rds file/proyEmisiBAU.rds") #PROYEKSI EMISIsaveRDS(rowsumProyEmisiSken2,"_DB/save rds file/rowsumProyEmisiSken2.rds") #rowsum emisi
+saveRDS(rowsumProyEmisi,"_DB/save rds file/rowsumProyEmisiBAU.rds") #rowsum emisi
+saveRDS(colsumProyEmisi,"_DB/save rds file/colsumProyEmisiBAU.rds") #colsum emisi
+
+
 #SKENARIO 1
 saveRDS(fdAllYearSken1,"_DB/save rds file/fdAllYearSken1.rds") #FD
 saveRDS(proyPdrbSken1,"_DB/save rds file/proyPdrbSken1.rds") #PDRB
@@ -645,10 +654,10 @@ saveRDS(deltaEmisiSken1,"_DB/save rds file/deltaEmisiSken1.rds")
 
 
 # SKENARIO 2
-saveRDS(fdAllYearSken2,"_DB/save rds file/fdAllYearSken1.rds") #FD
-saveRDS(proyPdrbSken2,"_DB/save rds file/proyPdrbSken1.rds") #PDRB
-saveRDS(proyTabelKonsEnergiSken2,"_DB/save rds file/proyTabelKonsEnergiSken1.rds") #PROYEKSI  KONSUMSI 
-saveRDS(proyEmisiSken2,"_DB/save rds file/proyEmisiSken1.rds") #PROYEKSI EMISI
+saveRDS(fdAllYearSken2,"_DB/save rds file/fdAllYearSken2.rds") #FD
+saveRDS(proyPdrbSken2,"_DB/save rds file/proyPdrbSken2.rds") #PDRB
+saveRDS(proyTabelKonsEnergiSken2,"_DB/save rds file/proyTabelKonsEnergiSken2.rds") #PROYEKSI  KONSUMSI 
+saveRDS(proyEmisiSken2,"_DB/save rds file/proyEmisiSken2.rds") #PROYEKSI EMISI
 saveRDS(rowsumProyEmisiSken2,"_DB/save rds file/rowsumProyEmisiSken2.rds") #rowsum emisi
 saveRDS(colsumProyEmisiSken2,"_DB/save rds file/colsumProyEmisiSken2.rds") #colsum emisi
 saveRDS(deltaPDRBSken2,"_DB/save rds file/deltaPDRBSken2.rds")
