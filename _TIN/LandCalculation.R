@@ -3,31 +3,74 @@ library(quadprog)
 library(stringr)
 library(dplyr)
 library(plotly)
+library(reshape2)
 
-tOutputSeries<-read.csv("_TIN/landCalc/tOutputSeries.csv")
-landCover_his<-read.csv("_TIN/landCalc/landCover_his.csv", header=FALSE)
-LDMProp_his<-read.csv("_TIN/landCalc/LDMProp.csv")
-GDPAll<-readRDS("_TIN/data/JaBar/GDPAll")
-sector<-readRDS("_TIN/data/JaBar/sector")
-LUTM_template<-read.csv("_TIN/landCalc/LUTM_template.csv")
-LUTM_his<-read.csv("_TIN/landCalc/LUTM_his2.csv")
-LRCRate_his<-read.csv("_TIN/landCalc/LRCRate.csv",header = FALSE)
-LRCRate_2<-read.csv("_TIN/landCalc/LRCRate_2.csv",header=FALSE)
-carbonStock_his<-data.matrix(read.csv("_TIN/landCalc/carbonStock.csv"))
+
+
+
+###BEGIN: initiate all variables ####
+
+# username <- "alfanugraha"
+# password <- "1234"
+selectedProv = "Sulawesi_Selatan"
+scenNumber=1
+datapath <- paste0("_TIN/data/", selectedProv, "/")
+resultpath<-paste0("_TIN/result/", selectedProv, "/landScen", scenNumber,"_")
+
+LUTMDatabase<-as.data.frame(read.csv("_TIN/data/LUTMDatabaseID.csv"))
+
+periodIO<-readRDS(paste0(datapath, "periodIO"))
+tOutputSeries<-read.csv(paste0(datapath,"tOutputSeries.csv"))
+# landCover_his<-read.csv(paste0(datapath,"landCover_his.csv"), header=FALSE)
+LDMProp_his<-read.csv(paste0(datapath, "LDMProp.csv")) # if CSV
+# LDMProp_his<-readRDS(paste0(datapath,"LDMProp"))   # if RDS
+GDPAll<-readRDS(paste0(datapath,"GDPAll"))
+sector<-readRDS(paste0(datapath,"sector"))
+LUTM_template<-read.csv(paste0(datapath,"LUTM_template.csv"))
+# LUTM_his<-read.csv(paste0(datapath,"LUTM_his.csv"))
+LRCRate_his<-read.csv(paste0(datapath,"LRCRate.csv"),header = FALSE)
+LRCRate_2<-read.csv(paste0(datapath,"LRCRate_2.csv"),header=FALSE)
+carbonStock_his<-data.matrix(read.csv(paste0(datapath,"carbonStock.csv")))
 carbonStock_his<-as.matrix(carbonStock_his[,3])
-leontief <- readRDS("_TIN/data/JaBar/leontief")
-findem_series<-read.csv("_TIN/landCalc/findem_series.csv",header=FALSE)
+leontief <- readRDS(paste0(datapath,"leontief"))
+findem_series<-read.csv(paste0(datapath,"findem_series.csv"),header=FALSE)
+indem<-readRDS(paste0(datapath, "indem"))
+findem<-readRDS(paste0(datapath,"findem"))
+
+################################# (i) PREPARE DATA  #############################################################
+
+##### buat LUTM_his dan landCover_his#####
 
 
+LUTMDatabase<-LUTMDatabase[LUTMDatabase$Provinsi==paste0(selectedProv),c("Count",paste0("PL", periodIO-1, "RCL"), paste0("PL",periodIO,"RCL"))]
+# LUTMDatabase<-LUTMDatabase[LUTMDatabase$Provinsi==paste0(selectedProv),c("Count",paste0("PL", 2010, "RCL"), paste0("PL",2011,"RCL"))]
 
-################################# (I) PERHITUNGAN BAU LAHAN ######################################################
+colnames(LUTMDatabase)<-c("COUNT","ID_LC1","ID_LC2")
+tuplaID<- cbind(as.matrix(cbind(matrix(0, nrow=23^2, ncol=1), as.matrix(expand.grid(1:23, 1:23)))))
+colnames(tuplaID)<-c("COUNT","ID_LC1","ID_LC2")
+LUTMDatabase<-rbind(LUTMDatabase,tuplaID)
 
 
-# hitung proyeksi GPD BAU lahan
-GDP_BAU<-matrix(NA, nrow=nrow(findem_series), ncol=ncol(findem_series))
-for (i in 1:ncol(findem_series)){
-  GDP_BAU[,i]<-tOutputSeries[,i]*GDPAll$P_OUTPUT
-}
+LUTMDatabase<-aggregate(LUTMDatabase, by=list(LUTMDatabase$ID_LC1,LUTMDatabase$ID_LC2), FUN=sum)
+LUTMDatabase<-LUTMDatabase[,1:3]
+colnames(LUTMDatabase)<-c("ID_LC1","ID_LC2","COUNT")
+LUTMDatabase<-LUTMDatabase[LUTMDatabase$ID_LC1>0,]
+LUTMDatabase<-LUTMDatabase[LUTMDatabase$ID_LC2>0,]
+
+sum(LUTMDatabase$COUNT) #cek
+
+LUTMDatabase <- melt(data = LUTMDatabase, id.vars=c('ID_LC1','ID_LC2'), measure.vars=c('COUNT'))
+
+areaLandCover1 <- dcast(data = LUTMDatabase, formula = ID_LC1 ~ ., fun.aggregate = sum)   
+colnames(areaLandCover1)[2] ="COUNT"
+
+areaLandCover2 <- dcast(data = LUTMDatabase, formula = ID_LC2 ~ ., fun.aggregate = sum)
+colnames(areaLandCover2)[2] ="COUNT"
+
+landCover_his<-areaLandCover2[,2]
+
+LUTM_his <- dcast(data = LUTMDatabase, formula = ID_LC1 ~ ID_LC2, fun.aggregate = sum)
+LUTM_his<-LUTM_his[,-1]
 
 
 ###########################  hitung landTable, LPC, LRC historis #####################
@@ -40,15 +83,29 @@ diagLU_his<-as.matrix(diag(landCover_his[,1]))
 landTable_his<-LDMProp_his%*%diagLU_his
 landReq_his<-as.matrix(rowSums(landTable_his))
 
-LPC_his<-rbind(as.matrix(tOutputSeries[,1]), 0)/landReq_his
+
+LPC_his<-rbind(as.matrix(rowSums(cbind(indem, findem))), 0)/landReq_his    #rowSums(cbind(indem, findem))=output
 LPC_his[is.infinite(LPC_his)]<-0
+LPC_his[is.nan(LPC_his)]<-0
 LRC_his<-1/LPC_his
 LRC_his[is.infinite(LRC_his)]<-0
+LRC_his[is.nan(LPC_his)]<-0
 landTable_his<-as.data.frame(cbind(rbind(as.matrix(sector[,1]), "sektor lainnya"), rbind(as.matrix(sector[,2]), "sektor lainnya"), landTable_his, landReq_his, LPC_his, LRC_his))
 colnames(landTable_his)<-c("Sektor", "Kategori", colnames(LDMProp_his),"Total_Kebutuhan_Lahan", "LPC", "LRC")
 tahun<-as.vector(str_extract_all(colnames(landCover_his), '[0-9]+'))
 tahun<-as.data.frame(tahun)
 tahun<-t(tahun)
+
+
+################################# (I) PERHITUNGAN BAU LAHAN ######################################################
+
+
+# hitung proyeksi GPD BAU lahan
+GDP_BAU<-matrix(NA, nrow=nrow(findem_series), ncol=ncol(findem_series))
+for (i in 1:ncol(findem_series)){
+  GDP_BAU[,i]<-tOutputSeries[,i]*GDPAll$P_OUTPUT
+}
+
 
 #### cari LRC tiap tahun proyeksi####
 LRC_0<-matrix(NA, nrow=nrow(landTable_his),ncol=ncol(tOutputSeries))
@@ -73,16 +130,16 @@ colnames(landReq)<-colnames(tOutputSeries)
 
 for (i in 1:ncol(tOutputSeries)){
   landReq[,i]<-diag(LRC_0[,i])%*%rbind(as.matrix(tOutputSeries[,i]),0)
-  landReq[53,i]<-sum(landCover_his[,1])-sum(landReq[1:52,i])
+  landReq[nrow(landReq),i]<-sum(landCover_his[,1])-sum(landReq[1:nrow(landReq)-1,i])
 }
 
 
 if (length(landReq[landReq<0])>=1){
   for (i in 1:ncol(tOutputSeries)){
     landReq[,i]<-diag(LRC_2[,i])%*%rbind(as.matrix(tOutputSeries[,i]),0)
-    landReq[53,i]<-sum(landCover_his[,1])-sum(landReq[1:52,i])
-    print("LRC_2 is used")
+landReq[nrow(landReq),i]<-sum(landCover_his[,1])-sum(landReq[1:nrow(landReq)-1,i])
   }
+  print("LRC_2 is used")
 }else{}
 
 
@@ -92,7 +149,12 @@ rownames(landReq)<-c(as.matrix(sector[,1]),"sektor lainnya")
 #### buat LDM prop (proporsi terhadap sektor) ####
 LDMLuas<- as.matrix(landTable_his[,3:25])
 class(LDMLuas)<-"numeric"
-LDMProp_sektor<-t(LDMLuas)%*%solve(diag(rowSums(LDMLuas)))
+# LDMProp_sektor<-t(LDMLuas)%*%solve(diag(rowSums(LDMLuas)))
+LDMProp_sektor<-matrix(NA, nrow=ncol(LDMLuas), ncol=nrow(LDMLuas))
+for (i in 1:ncol(LDMProp_sektor)){
+  LDMProp_sektor[,i]<-as.matrix(LDMLuas[i,]/sum(LDMLuas[i,]))
+}
+LDMProp_sektor[is.na(LDMProp_sektor)]<-0
 
 
 ################## cari land cover dari landReq yang diketahui: Land Cover<-LDMProp_sektor * LandReq ####################
@@ -194,30 +256,30 @@ LUTM_template[is.na(LUTM_template)]<-namavariabel
       #               matriks H adalah tupla2 * persentase minimum
       
       
-      # ## cari nama variabel diagonal LUTM
-      # diagonalVariabel<-matrix(NA, ncol=1, nrow=ncol(LUTM_template))
-      # for (i in 1:ncol(LUTM_template)){
-      #   diagonalVariabel[i,1]<-LUTM_template[i,i]
-      # }
-      # diagonalVariabel<-diagonalVariabel[!(diagonalVariabel==0),]
-      # 
-      # ## buat matrix G constraint 1 & 2
-      # matrix_G<-rbind(diag(nrow=(jumlahvariabel)), matrix(0, nrow=length(diagonalVariabel),ncol=jumlahvariabel))
-      # colnames(matrix_G)<-namavariabel
-      # for (i in 1:length(diagonalVariabel)){
-      #   matrix_G[jumlahvariabel+i,diagonalVariabel[i]]<-1   #assign 1 untuk semua variabel diagonal
-      # }
-      # 
-      # 
-      # ## buat matrix H constraint 1 & 2
-      # matrix_H<-list()
-      # for (i in 1:ncol(landCover)){
-      #   if (i==1){
-      #     matrix_H[[i]]<-NULL
-      #   }else{
-      #     matrix_H[[i]]<-rbind(matrix(0,nrow=jumlahvariabel,ncol=1),as.matrix(landCover[(landCover[,i] != 0),i])*0.5)
-      #   }
-      # }
+      ## cari nama variabel diagonal LUTM
+      diagonalVariabel_pre<-matrix(NA, ncol=1, nrow=ncol(LUTM_template))
+      for (i in 1:ncol(LUTM_template)){
+        diagonalVariabel_pre[i,1]<-LUTM_template[i,i]
+      }
+      diagonalVariabel<-diagonalVariabel_pre[!(diagonalVariabel_pre==0),]
+
+      ## buat matrix G constraint 1 & 2
+      matrix_G<-rbind(diag(nrow=(jumlahvariabel)), matrix(0, nrow=length(diagonalVariabel),ncol=jumlahvariabel))
+      colnames(matrix_G)<-namavariabel
+      for (i in 1:length(diagonalVariabel)){
+        matrix_G[jumlahvariabel+i,diagonalVariabel[i]]<-1   #assign 1 untuk semua variabel diagonal
+      }
+
+
+      ## buat matrix H constraint 1 & 2
+      matrix_H<-list()
+      for (i in 1:ncol(landCover)){
+        if (i==1){
+          matrix_H[[i]]<-NULL
+        }else{
+          matrix_H[[i]]<-rbind(matrix(0,nrow=jumlahvariabel,ncol=1),as.matrix(landCover[(diagonalVariabel_pre!= 0),i])*0.2)
+        }
+      }
       
       ########################  asumsi 2 ###########################  
       
@@ -227,7 +289,7 @@ LUTM_template[is.na(LUTM_template)]<-namavariabel
       # analyze historical LUTM to decide which assumption to use for the inequality constraints
       # LUTMProp_his<-matrix(nrow=nrow(LUTM_his), ncol=ncol(LUTM_his))
       # for (i in 1:ncol(LUTMProp_his)){
-      #   LUTMProp_his[,i]<-LUTM_his[,i]/landCover[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
+      #   LUTMProp_his[,i]<-LUTM_his[,i]/landCover_his[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
       # }
       # LUTMProp_his[is.nan(LUTMProp_his)]<-0
       # LUTMProp_his<-LUTMProp_his*0.3  #0.9 dari proporsi
@@ -251,36 +313,36 @@ LUTM_template[is.na(LUTM_template)]<-namavariabel
       #               maka matriks G adalah matriks berisi 0 dan 1 (di mana 1 diberikan untuk variabel diagonal) dan matriks H adalah tupla2 * persentase minimum
       
       # analyze historical LUTM to decide which assumption to use for the inequality constraints
-      LUTMProp_his<-matrix(nrow=nrow(LUTM_his), ncol=ncol(LUTM_his))
-      for (i in 1:ncol(LUTMProp_his)){
-        LUTMProp_his[,i]<-LUTM_his[,i]/landCover[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
-      }
-      LUTMProp_his[is.nan(LUTMProp_his)]<-0
-      LUTMProp_his<-LUTMProp_his*0.3  #0.9 dari proporsi
-
-      ## cari nama variabel diagonal LUTM
-      diagonalVariabel<-matrix(NA, ncol=1, nrow=ncol(LUTM_template))
-      for (i in 1:ncol(LUTM_template)){
-        diagonalVariabel[i,1]<-LUTM_template[i,i]
-      }
-      diagonalVariabel<-diagonalVariabel[!(diagonalVariabel==0),]
-
-      ## buat matrix G constraint 1 & 2
-      matrix_G<-rbind(diag(nrow=(jumlahvariabel)), matrix(0, nrow=length(diagonalVariabel),ncol=jumlahvariabel))
-      colnames(matrix_G)<-namavariabel
-      for (i in 1:length(diagonalVariabel)){
-        matrix_G[jumlahvariabel+i,diagonalVariabel[i]]<-1   #assign 1 untuk semua variabel diagonal
-      }
-
-      pre_matrix_H<-list()
-      matrix_H<-list()
-      for (i in 1:ncol(landCover)){
-        pre_matrix_H[[i]]<-matrix(ncol=ncol(LUTMProp_his), nrow=nrow(LUTMProp_his))
-        for (a in 1:ncol(LUTMProp_his)){
-          pre_matrix_H[[i]][,a]<-LUTMProp_his[,a]*landCover[a,i]
-        }
-        matrix_H[[i]]<-rbind(matrix(pre_matrix_H[[i]][LUTM_template!=0], ncol=1),as.matrix(landCover[(landCover[,i] != 0),i])*0.8)
-      }
+      # LUTMProp_his<-matrix(nrow=nrow(LUTM_his), ncol=ncol(LUTM_his))
+      # for (i in 1:ncol(LUTMProp_his)){
+      #   LUTMProp_his[,i]<-LUTM_his[,i]/landCover_his[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
+      # }
+      # LUTMProp_his[is.nan(LUTMProp_his)]<-0
+      # LUTMProp_his<-LUTMProp_his*0.3  #0.9 dari proporsi
+      # 
+      # ## cari nama variabel diagonal LUTM
+      # diagonalVariabel_pre<-matrix(NA, ncol=1, nrow=ncol(LUTM_template))
+      # for (i in 1:ncol(LUTM_template)){
+      #   diagonalVariabel_pre[i,1]<-LUTM_template[i,i]
+      # }
+      # diagonalVariabel<-diagonalVariabel_pre[!(diagonalVariabel_pre==0),]
+      # 
+      # ## buat matrix G constraint 1 & 2
+      # matrix_G<-rbind(diag(nrow=(jumlahvariabel)), matrix(0, nrow=length(diagonalVariabel),ncol=jumlahvariabel))
+      # colnames(matrix_G)<-namavariabel
+      # for (i in 1:length(diagonalVariabel)){
+      #   matrix_G[jumlahvariabel+i,diagonalVariabel[i]]<-1   #assign 1 untuk semua variabel diagonal
+      # }
+      # 
+      # pre_matrix_H<-list()
+      # matrix_H<-list()
+      # for (i in 1:ncol(landCover)){
+      #   pre_matrix_H[[i]]<-matrix(ncol=ncol(LUTMProp_his), nrow=nrow(LUTMProp_his))
+      #   for (a in 1:ncol(LUTMProp_his)){
+      #     pre_matrix_H[[i]][,a]<-LUTMProp_his[,a]*landCover[a,i]
+      #   }
+      #   matrix_H[[i]]<-rbind(matrix(pre_matrix_H[[i]][LUTM_template!=0], ncol=1),as.matrix(landCover[(diagonalVariabel_pre != 0),i])*0.8)
+      # }
       
       
   ######################################  solve dengan metode LSEI #######################################################
@@ -353,7 +415,7 @@ for (i in 1:nrow(emissionBAU)){
 
 
 ################################## (II) PERHITUNGAN SKENARIO INTERVENSI #########################################
-scenNumber=1
+
 
 
 ## masukkan final demand skenario 
@@ -376,14 +438,14 @@ colnames(landScen_landReq)<-colnames(landScen_tOutputSeries)
 
 for (i in 1:ncol(landScen_tOutputSeries)){
   landScen_landReq[,i]<-diag(LRC_0[,i])%*%rbind(as.matrix(landScen_tOutputSeries[,i]),0)
-  landScen_landReq[53,i]<-sum(landCover_his[,1])-sum(landScen_landReq[1:52,i])
+  landScen_landReq[nrow(landScen_landReq),i]<-sum(landCover_his[,1])-sum(landScen_landReq[1:nrow(landScen_landReq)-1,i])
 }
 
 ## jika hasil landReq ada yang 0, gunakan LRC yang modified
 if (length(landScen_landReq[landScen_landReq<0])>=1){
   for (i in 1:ncol(landScen_tOutputSeries)){
     landScen_landReq[,i]<-diag(LRC_2[,i])%*%rbind(as.matrix(landScen_tOutputSeries[,i]),0)
-    landScen_landReq[53,i]<-sum(landCover_his[,1])-sum(landScen_landReq[1:52,i])
+    landScen_landReq[nrow(landScen_landReq),i]<-sum(landCover_his[,1])-sum(landScen_landReq[1:nrow(landScen_landReq)-1,i])
   }
 }else{}
 
@@ -408,7 +470,7 @@ rownames(landScen_landCover_proj)<-colnames(LDMProp_his)
 
 #################### Masukkan land cover intervensi ###############################
 # dari landCover baru yang diproyeksi berdasarkan final demand, edit sesuai dengan intervensi 
-write.csv(landScen_landCover_proj,paste0("_TIN/result/landScen",scenNumber,"_landCover_proj.csv"))     # sebagai output rhandsontable di interface
+write.csv(landScen_landCover_proj,paste0(resultpath,"landCover_proj.csv"))     # sebagai output rhandsontable di interface
 
 #edit landScen_landCover_result, dan masukkan kembali sebagai landScen_landCover
 #landScen_inputLandCover<-as.matrix(landScen_inputLandCover)   # sebagai user input
@@ -443,7 +505,7 @@ for (i in 1:ncol(landScen_LUTM_template)){
 landScen_jumlahvariabel<-length(landScen_LUTM_template[is.na(landScen_LUTM_template)])
 landScen_namavariabel<-paste0("x",1:length(landScen_LUTM_template[is.na(landScen_LUTM_template)]))
 landScen_LUTM_template[is.na(landScen_LUTM_template)]<-landScen_namavariabel
-
+rownames(landScen_LUTM_template) <-colnames(landScen_LUTM_template)
 
 # isi matriks transisi dengan menganggap matriks sbg system of linear equations
 
@@ -458,7 +520,7 @@ landScen_LUTM_template[is.na(landScen_LUTM_template)]<-landScen_namavariabel
 ##                maka matrix E matriks berisi 0 dan 1, di mana 1 diberikan untuk variabel yang berada pada kolom yang sama
 ##                matrix F berisi tupla tahun kedua
 
-##### buat matrix E
+####### buat matrix E #########
 landScen_matrix_E<-matrix(NA,nrow = 46, ncol = landScen_jumlahvariabel)
 colnames(landScen_matrix_E)<-landScen_namavariabel
 landScen_variabel_x<-list()
@@ -488,7 +550,9 @@ for (a in 1:ncol(landScen_LUTM_template)){  ##constraint 2
 landScen_matrix_E[is.na(landScen_matrix_E)]<-0 
 landScen_matrix_E<-landScen_matrix_E[(!(rbind(as.matrix(landScen_landCover[,1]),as.matrix(landScen_landCover[,1]))) == 0),]  #hapus constraint untuk tupla yg jumlahnya 0 agar compatible saat perhitungan LSEI
 
-## buat matrix F
+
+
+######  buat matrix F ######
 landScen_matrix_F<-list()
 for (i in 1:ncol(landScen_landCover)){
   if (i==1){
@@ -512,11 +576,11 @@ for (i in 1:ncol(landScen_landCover)){
 
 
 ## cari nama variabel diagonal LUTM
-landScen_diagonalVariabel<-matrix(NA, ncol=1, nrow=ncol(landScen_LUTM_template))
+landScen_diagonalVariabel_pre<-matrix(NA, ncol=1, nrow=ncol(landScen_LUTM_template))
 for (i in 1:ncol(landScen_LUTM_template)){
-  landScen_diagonalVariabel[i,1]<-landScen_LUTM_template[i,i]
+  landScen_diagonalVariabel_pre[i,1]<-landScen_LUTM_template[i,i]
 }
-landScen_diagonalVariabel<-landScen_diagonalVariabel[!(landScen_diagonalVariabel==0),]
+landScen_diagonalVariabel<-landScen_diagonalVariabel_pre[!(landScen_diagonalVariabel_pre==0),]
 
 ## buat matrix G constraint 1 & 2
 landScen_matrix_G<-rbind(diag(nrow=(landScen_jumlahvariabel)), matrix(0, nrow=length(landScen_diagonalVariabel),ncol=landScen_jumlahvariabel))
@@ -532,7 +596,7 @@ for (i in 1:ncol(landScen_landCover)){
   if (i==1){
     landScen_matrix_H[[i]]<-NULL
   }else{
-    landScen_matrix_H[[i]]<-rbind(matrix(0,nrow=landScen_jumlahvariabel,ncol=1),as.matrix(landScen_landCover[(landScen_landCover[,i] != 0),i])*0.5)
+    landScen_matrix_H[[i]]<-rbind(matrix(0,nrow=landScen_jumlahvariabel,ncol=1),as.matrix(landScen_landCover[(diagonalVariabel_pre != 0),i])*0.2)
   }
 }
 
@@ -544,7 +608,7 @@ for (i in 1:ncol(landScen_landCover)){
 # analyze historical LUTM to decide which assumption to use for the inequality constraints
 # LUTMProp_his<-matrix(nrow=nrow(LUTM_his), ncol=ncol(LUTM_his))
 # for (i in 1:ncol(LUTMProp_his)){
-#   LUTMProp_his[,i]<-LUTM_his[,i]/landCover[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
+#   LUTMProp_his[,i]<-LUTM_his[,i]/landCover_his[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
 # }
 # LUTMProp_his[is.nan(LUTMProp_his)]<-0
 # LUTMProp_his<-LUTMProp_his*0.3  #0.9 dari proporsi
@@ -570,17 +634,17 @@ for (i in 1:ncol(landScen_landCover)){
 # # analyze historical LUTM to decide which assumption to use for the inequality constraints
 # LUTMProp_his<-matrix(nrow=nrow(LUTM_his), ncol=ncol(LUTM_his))
 # for (i in 1:ncol(LUTMProp_his)){
-#   LUTMProp_his[,i]<-LUTM_his[,i]/landCover[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
+#   LUTMProp_his[,i]<-LUTM_his[,i]/landCover_his[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
 # }
 # LUTMProp_his[is.nan(LUTMProp_his)]<-0
 # LUTMProp_his<-LUTMProp_his*0.3  #0.9 dari proporsi
 # 
 # ## cari nama variabel diagonal LUTM
-# landScen_diagonalVariabel<-matrix(NA, ncol=1, nrow=ncol(landScen_LUTM_template))
+# landScen_diagonalVariabel_pre<-matrix(NA, ncol=1, nrow=ncol(landScen_LUTM_template))
 # for (i in 1:ncol(landScen_LUTM_template)){
-#   landScen_diagonalVariabel[i,1]<-landScen_LUTM_template[i,i]
+#   landScen_diagonalVariabe_prel[i,1]<-landScen_LUTM_template[i,i]
 # }
-# landScen_diagonalVariabel<-landScen_diagonalVariabel[!(landScen_diagonalVariabel==0),]
+# landScen_diagonalVariabel<-landScen_diagonalVariabel_pre[!(landScen_diagonalVariabel_pre==0),]
 # 
 # ## buat matrix G constraint 1 & 2
 # landScen_matrix_G<-rbind(diag(nrow=(landScen_jumlahvariabel)), matrix(0, nrow=length(landScen_diagonalVariabel),ncol=landScen_jumlahvariabel))
@@ -597,8 +661,62 @@ for (i in 1:ncol(landScen_landCover)){
 #   for (a in 1:ncol(LUTMProp_his)){
 #     landScen_pre_matrix_H[[i]][,a]<-LUTMProp_his[,a]*landScen_landCover[a,i]
 #   }
-#   landScen_matrix_H[[i]]<-rbind(matrix(landScen_pre_matrix_H[[i]][landScen_LUTM_template!=0], ncol=1),as.matrix(landScen_landCover[(landScen_landCover[,i] != 0),i])*0.8)
+#   landScen_matrix_H[[i]]<-rbind(matrix(landScen_pre_matrix_H[[i]][landScen_LUTM_template!=0], ncol=1),as.matrix(landScen_landCover[(landScen_diagonalVariabel_pre[,i] != 0),i])*0.8)
 # }
+
+################################ masukkan input additional constraint #########################
+
+        ###### input constraint matrix E ########
+
+        # landScen_additionalE<-landScen1_additionalE  # user input
+        eval(parse(text=paste0("landScen_additionalE<-landScen",scenNumber,"_additionalE")))
+        # masukkan tambahan constraint
+        if (is.null(landScen_additionalE)){
+          landScen_matrix_E<-landScen_matrix_E
+        } else{
+          landScen_matrix_E<- rbind(landScen_matrix_E, landScen_additionalE)
+        }
+
+        ###### input constraint matrix F #######
+        
+        # landScen_additionalF<-landScen1_additionalF  # user input
+        eval(parse(text=paste0("landScen_additionalF<-landScen",scenNumber,"_additionalF")))
+        # masukkan tambahan constraint
+        
+        if (is.null(landScen_additionalF)){
+          landScen_matrix_F<-landScen_matrix_F
+          print("landScen_matrix_F=null")
+        } else{
+          for (i in 1:length(landScen_matrix_F)){
+          landScen_matrix_F[[i]]<- rbind(landScen_matrix_F[[i]], landScen_additionalF[[i]])
+          }
+        }
+        
+        
+        ####### input constraint matrix G #######
+        
+          # landScen_additionalG<-landScen1_additionalG  # user input
+          eval(parse(text=paste0("landScen_additionalG<-landScen",scenNumber,"_additionalG")))
+          # masukkan tambahan constraint
+          if (is.null(landScen_additionalG)){
+            landScen_matrix_G<-landScen_matrix_G
+          } else{
+            landScen_matrix_G<- rbind(landScen_matrix_G, landScen_additionalG)
+          }
+        
+        
+        
+        ####### input constraint matrix H #######
+          # landScen_additionalF<-landScen1_additionalH  # user input
+          eval(parse(text=paste0("landScen_additionalH<-landScen",scenNumber,"_additionalH")))
+          # masukkan tambahan constraint
+          if (is.null(landScen_additionalH[[i]])){
+              landScen_matrix_H<-landScen_matrix_H
+          } else{
+            for (i in 1:length(landScen_matrix_H)){
+            landScen_matrix_H[[i]]<- rbind(landScen_matrix_H[[i]], landScen_additionalH[[i]])
+            }  
+          }          
 
 
 ######################################  solve dengan metode LSEI #######################################################
@@ -639,7 +757,11 @@ if (is.null(landScen_LUTMChange)){
   landScen_LUTM<-landScen_LUTM
 } else {
   for (i in 1:length(landScen_LUTMChange)){
-    landScen_LUTM[[i]]<-as.matrix(landScen_LUTM[[i]]+landScen_LUTMChange[[i]])
+    if(i ==1){
+      landScen_LUTM[[i]]<-LUTM_his
+    }else{
+      landScen_LUTM[[i]]<-as.matrix(landScen_LUTM[[i]]+landScen_LUTMChange[[i]])
+    }
   }
 }
 
@@ -682,14 +804,14 @@ for (i in 1:nrow(landScen_emission)){
 
 ######### (1) scenario-specific dataframe of sector><simulation years depicting GDP, emission and emission intensity ########
 #### for BAU
-write.csv(GDP_BAU, "_TIN/result/landBAU_GDP.csv")
-write.csv(emissionBAU_sector,"_TIN/result/landBAU_emission.csv")
-write.csv(emIntensityBAU,"_TIN/result/landBAU_emIntensity.csv")
+write.csv(GDP_BAU, paste0(resultpath,"landBAU_GDP.csv"))
+write.csv(emissionBAU_sector,paste0(resultpath,"landBAU_emission.csv"))
+write.csv(emIntensityBAU,paste0(resultpath,"landBAU_emIntensity.csv"))
      
 #### for scenario   
-write.csv(landScen_GDP,paste0("_TIN/result/landScen",scenNumber,"_GDP.csv"))
-write.csv(landScen_emission_sector,paste0("_TIN/result/landScen",scenNumber,"_emission.csv"))
-write.csv(landScen_emIntensity,paste0("_TIN/result/landScen",scenNumber,"_emIntensity.csv"))
+write.csv(landScen_GDP,paste0(resultpath,"GDP.csv"))
+write.csv(landScen_emission_sector,paste0(resultpath,"emission.csv"))
+write.csv(landScen_emIntensity,paste0(resultpath,"emIntensity.csv"))
 
 
 ######### (2) scenario-specific dataframe of sector><simulation years depicting GDP change against BAU, emission change against BAU and emission intensity change against BAU#####
@@ -698,9 +820,9 @@ landScen_deltaGDP<-as.matrix(landScen_GDP-GDP_BAU)
 landScen_deltaEmission<-as.matrix(landScen_emission_sector-emissionBAU_sector)
 landScen_deltaEmIntensity<-as.matrix(landScen_emIntensity-emIntensityBAU)
 
-write.csv(landScen_deltaGDP, paste0("_TIN/result/landScen",scenNumber,"_deltaGDP.csv"))
-write.csv(landScen_deltaEmission, paste0("_TIN/result/landScen",scenNumber,"_deltaEmission.csv"))
-write.csv(landScen_deltaEmIntensity, paste0("_TIN/result/landScen",scenNumber,"_deltaEmIntensity.csv"))
+write.csv(landScen_deltaGDP, paste0(resultpath,"deltaGDP.csv"))
+write.csv(landScen_deltaEmission, paste0(resultpath,"deltaEmission.csv"))
+write.csv(landScen_deltaEmIntensity, paste0(resultpath,"deltaEmIntensity.csv"))
 
       
 ########## (3) scenario-specific dataframe from t0 - t15 depicting cumulative emission reduction, GDP change and emission intensity change #######
@@ -783,9 +905,9 @@ for (i in 1:nrow(landScen_totEmIntensityYear)){
 
 
 #### write csv
-write.csv(landScen_cumulativeGDP, paste0("_TIN/result/landScen",scenNumber,"_cumulativeGDP.csv"))
-write.csv(landScen_cumulativeEmission, paste0("_TIN/result/landScen",scenNumber,"_cumulativeEmission.csv"))
-write.csv(landScen_cumulativeEmIntensity, paste0("_TIN/result/landScen",scenNumber,"_cumulativeEmIntensity.csv"))
+write.csv(landScen_cumulativeGDP, paste0(resultpath,"cumulativeGDP.csv"))
+write.csv(landScen_cumulativeEmission, paste0(resultpath,"cumulativeEmission.csv"))
+write.csv(landScen_cumulativeEmIntensity, paste0(resultpath,"cumulativeEmIntensity.csv"))
 
 #### graph
 compare_cumulativeGDP<-merge(BAU_cumulativeGDP, landScen_cumulativeGDP,by="year")
@@ -799,8 +921,8 @@ compare_cumulativeEmIntensity<-merge(BAU_cumulativeEmIntensity, landScen_cumulat
     compare_cumulativeEmIntensity[,3]<-as.numeric(as.character(compare_cumulativeEmIntensity[,3]))
 
 plot_compare_cumulativeGDP<- ggplot(data=as.data.frame(compare_cumulativeGDP), aes(year)) + geom_line(aes(y=GDP.BAU, group=1, colour = "GDP.BAU")) + geom_line(aes(y=GDP, group=1,colour = "GDP"))
-plot_compare_cumulativeEmission<-ggplot(data=as.data.frame(compare_cumulativeEmission), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=1, colour = "emission"))
-plot_compare_cumulativeEmIntensity<-ggplot(data=as.data.frame(compare_cumulativeEmIntensity), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=1, colour = "emIntensity"))
+plot_compare_cumulativeEmission<-ggplot(data=as.data.frame(compare_cumulativeEmission[-c(1,2),]), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=1, colour = "emission"))
+plot_compare_cumulativeEmIntensity<-ggplot(data=as.data.frame(compare_cumulativeEmIntensity[-c(1,2),]), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=1, colour = "emIntensity"))
 
 persenPeningkatanGDP<-(compare_cumulativeGDP[16,3]/compare_cumulativeGDP[16,2]-1)*100
 persenPenurunanEmisi<-(compare_cumulativeEmission[16,3]/compare_cumulativeEmission[16,2]-1)*-100
@@ -815,8 +937,8 @@ landScen_totEmIntensityYear<-as.data.frame(landScen_totEmIntensityYear)
     landScen_totEmIntensityYear[,2]<-as.numeric(as.character(landScen_totEmIntensityYear[,2]))
     
 plot_landScen_totGDPYear<- ggplot(data=as.data.frame(landScen_totGDPYear), aes(x=year, y=GDP, group=1)) + geom_line() + geom_point()
-plot_landScen_totEmissionYear<-ggplot(data=as.data.frame(landScen_totEmissionYear), aes(x=year, y=emission, group=1)) + geom_line() + geom_point()
-plot_landScen_totEmIntensityYear<-ggplot(data=as.data.frame(landScen_totEmIntensityYear), aes(x=year, y=emIntensity, group=1)) + geom_line() + geom_point()
+plot_landScen_totEmissionYear<-ggplot(data=as.data.frame(landScen_totEmissionYear[-c(1),]), aes(x=year, y=emission, group=1)) + geom_line() + geom_point()
+plot_landScen_totEmIntensityYear<-ggplot(data=as.data.frame(landScen_totEmIntensityYear[-1,]), aes(x=year, y=emIntensity, group=1)) + geom_line() + geom_point()
 
 
 
@@ -832,21 +954,21 @@ compare_totEmIntensityYear<-merge(BAU_totEmIntensityYear,landScen_totEmIntensity
 
     
 plot_compare_totGDPYear<-ggplot(data=as.data.frame(compare_totGDPYear), aes(year)) + geom_line(aes(y=GDP.BAU, group=1, colour = "GDP.BAU")) + geom_line(aes(y=GDP, group=2,colour = "GDP"))
-plot_compare_totEmissionYear<-ggplot(data=as.data.frame(compare_totEmissionYear), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=2, colour = "emission"))
-plot_compare_totEmIntensityYear<-ggplot(data=as.data.frame(compare_totEmIntensityYear), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=2, colour = "emIntensity"))
+plot_compare_totEmissionYear<-ggplot(data=as.data.frame(compare_totEmissionYear[-c(1),]), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=2, colour = "emission"))
+plot_compare_totEmIntensityYear<-ggplot(data=as.data.frame(compare_totEmIntensityYear[-1,]), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=2, colour = "emIntensity"))
 
 
 # (5) bar chart of performance comparison across scenario at t15 on emission, GDP and emission intensity
 
 compare_landScenPerformance<-matrix(NA, nrow=7, ncol=4)
 for (i in 1:7){
-  GDP<-as.matrix(read.csv(paste0("_TIN/result/landScen",i,"_cumulativeGDP.csv"), header=TRUE))
-  emission<-as.matrix(read.csv(paste0("_TIN/result/landScen",i,"_cumulativeEmission.csv"), header=TRUE))
-  emIntensity<-as.matrix(read.csv(paste0("_TIN/result/landScen",i,"_cumulativeEmIntensity.csv"), header=TRUE))
+  GDP<-as.matrix(read.csv(paste0(resultpath,"cumulativeGDP.csv"), header=TRUE))
+  emission<-as.matrix(read.csv(paste0(resultpath,"cumulativeEmission.csv"), header=TRUE))
+  emIntensity<-as.matrix(read.csv(paste0(resultpath,"cumulativeEmIntensity.csv"), header=TRUE))
   compare_landScenPerformance[i,]<-cbind(paste0("landScen",i), 
                                          as.numeric(GDP[nrow(GDP),ncol(GDP)]),
                                          as.numeric(emission[nrow(emission),ncol(emission)]),
                                          as.numeric(emIntensity[nrow(emIntensity),ncol(emIntensity)]))
 }
 
-write.csv(compare_landScenPerformance,"_TIN/result/compare_landScenPerformance.csv")
+write.csv(compare_landScenPerformance,paste0(resultpath,"compare_landScenPerformance.csv"))
