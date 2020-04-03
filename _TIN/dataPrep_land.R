@@ -5,7 +5,8 @@
 #################################################################################################################
 
 
-selectedProv="SumSel"
+selectedProv="JaBar"
+scenNumber = 1
 scenpath <- paste0("_TIN/landCalc/", selectedProv, "/landScen", scenNumber,"_")
 
 ########################## skenario intervensi 1 ###########################
@@ -36,8 +37,8 @@ for (i in 1:ncol(landScen1_findem)){
   }
 }
 
-landScen3_additionalG<-NULL
-landScen3_additionalH<-NULL
+landScen1_additionalG<-NULL
+landScen1_additionalH<-NULL
 landScen1_LUTMChange<-NULL
 
 
@@ -69,8 +70,8 @@ for(i in 1:ncol(landScen2_findem)){
   }
 }
 
-landScen3_additionalE<-NULL
-landScen3_additionalF<-NULL
+landScen2_additionalE<-NULL
+landScen2_additionalF<-NULL
 landScen2_LUTMChange<-NULL
 
 ####################################### SKENARIO 3 ##############################################################
@@ -110,18 +111,28 @@ landScen4_LUTM_template<-landScen1_LUTM_template
 ### make additional constraint for matrix E & matrix F
 # perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
 # perubahan lahan terbuka menjadi hutan sekunder 0.76851791*2344/15 = X7 = 0.76851791*2344/15
-landScen4_additionalE<-matrix(0, nrow=4,ncol=131)   #131= jumlahvariabel
+landScen4_additionalE<-matrix(0, nrow=2,ncol=131)   #131= jumlahvariabel
 landScen4_additionalE[1,5]<-1  #for x5
 landScen4_additionalE[2,7]<-1  #for x7
-landScen4_additionalE[3,57]<-1  #for x57
-landScen4_additionalE[4,62]<-1  #for X62
+landScen4_additionalG<-matrix(0, nrow=2,ncol=131)
+landScen4_additionalG[1,57]<-1  #for x57
+landScen4_additionalG[2,62]<-1  #for X62
 
 landScen4_additionalF<-list()
 for (i in 1:ncol(landScen1_findem)){
   if (i==1){
-    landScen4_additionalF[[i]]<-matrix(0, nrow=4, ncol=1)
+    landScen4_additionalF[[i]]<-matrix(0, nrow=2, ncol=1)
   }else{
-    landScen4_additionalF[[i]]<-rbind(landScen1_additionalF[[i]],landScen2_additionalF[[i]])
+    landScen4_additionalF[[i]]<-landScen1_additionalF[[i]]
+  }
+}
+
+landScen4_additionalH<-list()
+for (i in 1:ncol(landScen1_findem)){
+  if (i==1){
+    landScen4_additionalH[[i]]<-matrix(0, nrow=2, ncol=1)
+  }else{
+    landScen4_additionalH[[i]]<-landScen2_additionalH[[i]]
   }
 }
 
@@ -275,6 +286,11 @@ landScen1_LUTMChange<-NULL
 # Rehabilitasi lahan dengan skema hutan tanaman masyarakat 
 # lahan kritis (semak, savana, & lahan terbuka) di Hutan Produksi -> agroforest ()
 # intervensi di TPM, perubahan lahan kritis -> kebun campur sebesar 5713 Ha disebar merata tiap tahun
+
+selectedProv="SumSel"
+scenNumber=2
+scenpath <- paste0("_TIN/landCalc/", selectedProv, "/landScen", scenNumber,"_")
+
 landScen2_findem <-read.csv(paste0(scenpath,"findem.csv"), header = FALSE)
 landScen2_inputLandCover<-read.csv(paste0(scenpath,"inputLandCover.csv"), header=FALSE)
 landScen2_LUTM_template<-read.csv(paste0(scenpath,"LUTM_template.csv"), header=TRUE)
@@ -307,6 +323,41 @@ landScen2_additionalF<-NULL
 landScen2_LUTMChange<-NULL
 
 
+######################### combination of scenario 1&2 ##############################
+landScen3_findem <-landScen1_findem+landScen2_findem
+landScen3_inputLandCover<-landScen1_inputLandCover+landScen2_inputLandCover
+# landScen3_LUTM_template<-landScen1_LUTM_template
+
+## aggreaget LUTM_template
+landScen3_LUTM_template<-matrix(0, nrow=23, ncol=23)
+landScen3_LUTM_template[is.na(landScen1_LUTM_template)]<-NA
+landScen3_LUTM_template[is.na(landScen2_LUTM_template)]<-NA
+
+
+### make additional constraint for matrix E & matrix F
+# perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
+# perubahan lahan terbuka menjadi hutan sekunder 0.76851791*2344/15 = X7 = 0.76851791*2344/15
+
+landScen3_additionalE<-NULL
+landScen3_additionalF<-NULL
+landScen3_additionalG<-matrix(0, nrow=6,ncol=164)   #131= jumlahvariabel
+landScen3_additionalG[1,6]<-1  #for x6
+landScen3_additionalG[2,8]<-1  #for x8
+landScen3_additionalG[3,10]<-1  #for x10
+landScen3_additionalG[4,77]<-1  #for x77
+landScen3_additionalG[5,78]<-1  #for X78
+landScen3_additionalG[6,84]<-1  #for x84
+
+landScen3_additionalH<-list()
+for (i in 1:ncol(landScen3_findem)){
+  if (i==1){
+    landScen3_additionalH[[i]]<-matrix(0, nrow=6, ncol=1)
+  }else{
+    landScen3_additionalH[[i]]<-rbind(landScen1_additionalH[[i]],landScen2_additionalH[[i]])
+  }
+}
+
+landScen3_LUTMChange<-NULL
 
 ###################################################################################################################
 #
@@ -339,7 +390,7 @@ landScen1_additionalF<-NULL
 # perubahan semak menjadi hutan sekunder sebanyak 7177.714286 = X4
 # perubahan savanna menjadi hutan sekunder 2091.52381 = X6
 # perubahan lahan terbuka menjadi hutan sekunder 133.1904762 = x8
-landScen1_additionalG<-matrix(0, nrow=3,ncol=154)   #156= jumlahvariabel
+landScen1_additionalG<-matrix(0, nrow=3,ncol=154)   #154= jumlahvariabel
 landScen1_additionalG[1,4]<-1  #for x4
 landScen1_additionalG[2,6]<-1  #for x6
 landScen1_additionalG[3,8]<-1  #for x8
@@ -359,6 +410,7 @@ landScen1_LUTMChange<-NULL
 # pengembangan hutan rakyat
 # Rehabilitasi lahan dengan skema hutan tanaman masyarakat 
 # lahan kritis (semak, savana, & lahan terbuka) di Hutan Produksi -> agroforest ()
+# findem: sektor perkebunan (19), angkutan darat (96), Jasa Kemasyarakatan Lainnya  (109)
 # intervensi di TPM, perubahan lahan kritis -> kebun campur sebesar 5713 Ha disebar merata tiap tahun
 
 selectedProv="Sulawesi_Selatan"
@@ -370,21 +422,21 @@ landScen2_inputLandCover<-read.csv(paste0(scenpath,"inputLandCover.csv"), header
 landScen2_LUTM_template<-read.csv(paste0(scenpath,"LUTM_template.csv"), header=TRUE)
 
 ### make additional constraint for matrix G & matrix H
-# perubahan semak menjadi pertanian lahan kering campur sebanyak 8584 ha = X75
-# perubahan savanna menjadi pertanian lahan kering campur sebanyak 585.1 = X78
-# perubahan lahan terbuka menjadi pertanian lahan kering campur 22020.05 = X82
+# perubahan semak menjadi pertanian lahan kering campur sebanyak 4674.190476 ha = X71
+# perubahan savanna menjadi pertanian lahan kering campur sebanyak 340.7142857 = X72
+# perubahan lahan terbuka menjadi pertanian lahan kering campur 91 = X78
 
-landScen2_additionalG<-matrix(0,nrow=3, ncol=154)   #130 = jumlahvariabel
-landScen2_additionalG[1,75]<-1  #for x75
-landScen2_additionalG[2,78]<-1  #for X78
-landScen2_additionalG[3,82]<-1  #for X82
+landScen2_additionalG<-matrix(0,nrow=3, ncol=153)   #153 = jumlahvariabel
+landScen2_additionalG[1,71]<-1  #for x71
+landScen2_additionalG[2,72]<-1  #for X72
+landScen2_additionalG[3,78]<-1  #for X78
 
 landScen2_additionalH<-list()
 for(i in 1:ncol(landScen2_findem)){
   if(i==1){
     landScen2_additionalH[[i]]<-matrix(c(0,0,0), nrow=3, ncol=1)  
   }else{
-    landScen2_additionalH[[i]]<-matrix(c(8584, 585.1, 22020.05),
+    landScen2_additionalH[[i]]<-matrix(c(4674.190476, 340.7142857, 91),
                                        # (8584)+variabel_lsei[[i]][75,1], 
                                        #   (585.1)+variabel_lsei[[i]][78,1],
                                        #   (22020.05)+variabel_lsei[[i]][82,1]),
@@ -395,3 +447,41 @@ for(i in 1:ncol(landScen2_findem)){
 landScen2_additionalE<-NULL
 landScen2_additionalF<-NULL
 landScen2_LUTMChange<-NULL
+
+
+######################### combination of scenario 1&2 ##############################
+
+landScen3_findem <-landScen1_findem+landScen2_findem
+landScen3_inputLandCover<-landScen1_inputLandCover+landScen2_inputLandCover
+# landScen3_LUTM_template<-landScen1_LUTM_template
+
+## aggreaget LUTM_template
+landScen3_LUTM_template<-matrix(0, nrow=23, ncol=23)
+landScen3_LUTM_template[is.na(landScen1_LUTM_template)]<-NA
+landScen3_LUTM_template[is.na(landScen2_LUTM_template)]<-NA
+
+
+### make additional constraint for matrix E & matrix F
+# perubahan semak menjadi hutan sekunder sebanyak 0.23148209*2344/15= X5 = 0.23148209*2344/15
+# perubahan lahan terbuka menjadi hutan sekunder 0.76851791*2344/15 = X7 = 0.76851791*2344/15
+
+landScen3_additionalE<-NULL
+landScen3_additionalF<-NULL
+landScen3_additionalG<-matrix(0, nrow=6,ncol=155)   #131= jumlahvariabel
+landScen3_additionalG[1,4]<-1  #for x4
+landScen3_additionalG[2,6]<-1  #for x6
+landScen3_additionalG[3,8]<-1  #for x8
+landScen3_additionalG[4,73]<-1  #for x73
+landScen3_additionalG[5,74]<-1  #for X74
+landScen3_additionalG[6,80]<-1  #for x80
+
+landScen3_additionalH<-list()
+for (i in 1:ncol(landScen3_findem)){
+  if (i==1){
+    landScen3_additionalH[[i]]<-matrix(0, nrow=6, ncol=1)
+  }else{
+    landScen3_additionalH[[i]]<-rbind(landScen1_additionalH[[i]],landScen2_additionalH[[i]])
+  }
+}
+
+landScen3_LUTMChange<-NULL

@@ -12,10 +12,10 @@ library(reshape2)
 
 # username <- "alfanugraha"
 # password <- "1234"
-selectedProv = "Sulawesi_Selatan"
-scenNumber=1
+selectedProv = "SumSel"
+# scenNumber = 1
 datapath <- paste0("_TIN/data/", selectedProv, "/")
-resultpath<-paste0("_TIN/result/", selectedProv, "/landScen", scenNumber,"_")
+# resultpath<-paste0("_TIN/result/", selectedProv, "/landScen", scenNumber,"_")
 
 LUTMDatabase<-as.data.frame(read.csv("_TIN/data/LUTMDatabaseID.csv"))
 
@@ -277,7 +277,7 @@ LUTM_template[is.na(LUTM_template)]<-namavariabel
         if (i==1){
           matrix_H[[i]]<-NULL
         }else{
-          matrix_H[[i]]<-rbind(matrix(0,nrow=jumlahvariabel,ncol=1),as.matrix(landCover[(diagonalVariabel_pre!= 0),i])*0.2)
+          matrix_H[[i]]<-rbind(matrix(0,nrow=jumlahvariabel,ncol=1),as.matrix(landCover[(diagonalVariabel_pre!= 0),i])*0)
         }
       }
       
@@ -418,6 +418,12 @@ for (i in 1:nrow(emissionBAU)){
 
 
 
+scenNumber=3
+resultpath<-paste0("_TIN/result/", selectedProv, "/landScen", scenNumber,"_")
+
+
+
+
 ## masukkan final demand skenario 
 #landScen_findem<-landScen1_findem
 eval(parse(text=paste0("landScen_findem<-landScen",scenNumber,"_findem")))  #landScen_findem = user input
@@ -505,7 +511,8 @@ for (i in 1:ncol(landScen_LUTM_template)){
 landScen_jumlahvariabel<-length(landScen_LUTM_template[is.na(landScen_LUTM_template)])
 landScen_namavariabel<-paste0("x",1:length(landScen_LUTM_template[is.na(landScen_LUTM_template)]))
 landScen_LUTM_template[is.na(landScen_LUTM_template)]<-landScen_namavariabel
-rownames(landScen_LUTM_template) <-colnames(landScen_LUTM_template)
+rownames(landScen_LUTM_template) <-colnames(LUTM_template)
+colnames(landScen_LUTM_template)<-colnames(LUTM_template)
 
 # isi matriks transisi dengan menganggap matriks sbg system of linear equations
 
@@ -596,7 +603,7 @@ for (i in 1:ncol(landScen_landCover)){
   if (i==1){
     landScen_matrix_H[[i]]<-NULL
   }else{
-    landScen_matrix_H[[i]]<-rbind(matrix(0,nrow=landScen_jumlahvariabel,ncol=1),as.matrix(landScen_landCover[(diagonalVariabel_pre != 0),i])*0.2)
+    landScen_matrix_H[[i]]<-rbind(matrix(0,nrow=landScen_jumlahvariabel,ncol=1),as.matrix(landScen_landCover[(diagonalVariabel_pre != 0),i])*0)
   }
 }
 
@@ -802,7 +809,44 @@ for (i in 1:nrow(landScen_emission)){
 
 ######################## write data ############################
 
+
+##### hapus tahun pertama. Perlu nggak yah?
+GDP_BAU<-GDP_BAU[,-c(1)]
+emissionBAU_sector<-emissionBAU_sector[,-c(1)]
+emissionBAU<-emissionBAU[-c(1),]
+emIntensityBAU<-emIntensityBAU[,-c(1)]
+landScen_GDP<-landScen_GDP[,-c(1)]
+landScen_emission_sector<-landScen_emission_sector[,-c(1)]
+landScen_emIntensity<-landScen_emIntensity[,-c(1)]
+tOutputSeries<-tOutputSeries[,-c(1)]
+landScen_tOutputSeries<-landScen_tOutputSeries[,-c(1)]
+
+# #### buat tabel sesuai start & end year
+# colnames(GDP_BAU)<-colnames(tOutputSeries)
+# colnames(emissionBAU_sector)<-colnames(tOutputSeries)
+# rownames(emissionBAU)<-colnames(tOutputSeries)
+# colnames(emIntensityBAU)<-colnames(tOutputSeries)
+# colnames(landScen_GDP)<-colnames(tOutputSeries)
+# colnames(landScen_emission_sector)<-colnames(tOutputSeries)
+# colnames(landScen_emIntensity)<-colnames(tOutputSeries)
+# colnames(landScen_tOutputSeries)<-colnames(tOutputSeries)
+# 
+# startYear= "y2017"
+# endYear= "y2020"
+# 
+# GDP_BAU<-GDP_BAU[,startYear:endYear]
+# emissionBAU_sector<-emissionBAU_sector[,-c(1)]
+# emissionBAU<-emissionBAU[-c(1),]
+# emIntensityBAU<-emIntensityBAU[,-c(1)]
+# landScen_GDP<-landScen_GDP[,-c(1)]
+# landScen_emission_sector<-landScen_emission_sector[,-c(1)]
+# landScen_emIntensity<-landScen_emIntensity[,-c(1)]
+# tOutputSeries<-tOutputSeries[,-c(1)]
+# landScen_tOutputSeries<-landScen_tOutputSeries[,-c(1)]
+
+
 ######### (1) scenario-specific dataframe of sector><simulation years depicting GDP, emission and emission intensity ########
+
 #### for BAU
 write.csv(GDP_BAU, paste0(resultpath,"landBAU_GDP.csv"))
 write.csv(emissionBAU_sector,paste0(resultpath,"landBAU_emission.csv"))
@@ -921,12 +965,12 @@ compare_cumulativeEmIntensity<-merge(BAU_cumulativeEmIntensity, landScen_cumulat
     compare_cumulativeEmIntensity[,3]<-as.numeric(as.character(compare_cumulativeEmIntensity[,3]))
 
 plot_compare_cumulativeGDP<- ggplot(data=as.data.frame(compare_cumulativeGDP), aes(year)) + geom_line(aes(y=GDP.BAU, group=1, colour = "GDP.BAU")) + geom_line(aes(y=GDP, group=1,colour = "GDP"))
-plot_compare_cumulativeEmission<-ggplot(data=as.data.frame(compare_cumulativeEmission[-c(1,2),]), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=1, colour = "emission"))
-plot_compare_cumulativeEmIntensity<-ggplot(data=as.data.frame(compare_cumulativeEmIntensity[-c(1,2),]), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=1, colour = "emIntensity"))
+plot_compare_cumulativeEmission<-ggplot(data=as.data.frame(compare_cumulativeEmission), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=1, colour = "emission"))
+plot_compare_cumulativeEmIntensity<-ggplot(data=as.data.frame(compare_cumulativeEmIntensity), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=1, colour = "emIntensity"))
 
-persenPeningkatanGDP<-(compare_cumulativeGDP[16,3]/compare_cumulativeGDP[16,2]-1)*100
-persenPenurunanEmisi<-(compare_cumulativeEmission[16,3]/compare_cumulativeEmission[16,2]-1)*-100
-persenPenurunanIntensitasEmisi<-(compare_cumulativeEmIntensity[16,3]/compare_cumulativeEmIntensity[16,2]-1)*-100
+persenPeningkatanGDP<-(compare_cumulativeGDP[nrow(compare_cumulativeGDP),3]/compare_cumulativeGDP[nrow(compare_cumulativeGDP),2]-1)*100
+persenPenurunanEmisi<-(compare_cumulativeEmission[nrow(compare_cumulativeEmission),3]/compare_cumulativeEmission[nrow(compare_cumulativeEmission),2]-1)*-100
+persenPenurunanIntensitasEmisi<-(compare_cumulativeEmIntensity[nrow(compare_cumulativeEmIntensity),3]/compare_cumulativeEmIntensity[nrow(compare_cumulativeEmIntensity),2]-1)*-100
 
 ####### (4) scenario-specific line chart of emission, GDP and emission intensity ########
 landScen_totGDPYear<-as.data.frame(landScen_totGDPYear)
@@ -935,10 +979,12 @@ landScen_totEmissionYear<-as.data.frame(landScen_totEmissionYear)
     landScen_totEmissionYear[,2]<-as.numeric(as.character(landScen_totEmissionYear[,2]))
 landScen_totEmIntensityYear<-as.data.frame(landScen_totEmIntensityYear)
     landScen_totEmIntensityYear[,2]<-as.numeric(as.character(landScen_totEmIntensityYear[,2]))
-    
+
+
+        
 plot_landScen_totGDPYear<- ggplot(data=as.data.frame(landScen_totGDPYear), aes(x=year, y=GDP, group=1)) + geom_line() + geom_point()
-plot_landScen_totEmissionYear<-ggplot(data=as.data.frame(landScen_totEmissionYear[-c(1),]), aes(x=year, y=emission, group=1)) + geom_line() + geom_point()
-plot_landScen_totEmIntensityYear<-ggplot(data=as.data.frame(landScen_totEmIntensityYear[-1,]), aes(x=year, y=emIntensity, group=1)) + geom_line() + geom_point()
+plot_landScen_totEmissionYear<-ggplot(data=as.data.frame(landScen_totEmissionYear), aes(x=year, y=emission, group=1)) + geom_line() + geom_point()
+plot_landScen_totEmIntensityYear<-ggplot(data=as.data.frame(landScen_totEmIntensityYear), aes(x=year, y=emIntensity, group=1)) + geom_line() + geom_point()
 
 
 
@@ -954,8 +1000,17 @@ compare_totEmIntensityYear<-merge(BAU_totEmIntensityYear,landScen_totEmIntensity
 
     
 plot_compare_totGDPYear<-ggplot(data=as.data.frame(compare_totGDPYear), aes(year)) + geom_line(aes(y=GDP.BAU, group=1, colour = "GDP.BAU")) + geom_line(aes(y=GDP, group=2,colour = "GDP"))
-plot_compare_totEmissionYear<-ggplot(data=as.data.frame(compare_totEmissionYear[-c(1),]), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=2, colour = "emission"))
-plot_compare_totEmIntensityYear<-ggplot(data=as.data.frame(compare_totEmIntensityYear[-1,]), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=2, colour = "emIntensity"))
+plot_compare_totEmissionYear<-ggplot(data=as.data.frame(compare_totEmissionYear), aes(year)) + geom_line(aes(y=emission.BAU, group=1, colour = "emission.BAU")) + geom_line(aes(y=emission,group=2, colour = "emission"))
+plot_compare_totEmIntensityYear<-ggplot(data=as.data.frame(compare_totEmIntensityYear), aes(year)) + geom_line(aes(y=emIntensity.BAU, group=1, colour = "emIntensity.BAU")) + geom_line(aes(y=emIntensity,group=2, colour = "emIntensity"))
+
+ggsave(paste0(resultpath, "plot_compare_cumulativeEmIntensity.jpg"), plot_compare_cumulativeEmIntensity)
+ggsave(paste0(resultpath, "plot_compare_cumulativeEmission.jpg"), plot_compare_cumulativeEmission)
+ggsave(paste0(resultpath, "plot_compare_cumulativeGDP.jpg"), plot_compare_cumulativeGDP)
+ggsave(paste0(resultpath, "plot_compare_totEmIntensityYear.jpg"), plot_compare_totEmIntensityYear)
+ggsave(paste0(resultpath, "plot_compare_totEmissionYear.jpg"), plot_compare_totEmissionYear)
+ggsave(paste0(resultpath, "plot_compare_totGDPYear.jpg"), plot_compare_totGDPYear)
+
+
 
 
 # (5) bar chart of performance comparison across scenario at t15 on emission, GDP and emission intensity
