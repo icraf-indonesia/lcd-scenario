@@ -12,7 +12,7 @@ library(reshape2)
 
 # username <- "alfanugraha"
 # password <- "1234"
-selectedProv = "SumSel"
+selectedProv = "JaBar"
 # scenNumber = 1
 datapath <- paste0("_TIN/data/", selectedProv, "/")
 # resultpath<-paste0("_TIN/result/", selectedProv, "/landScen", scenNumber,"_")
@@ -277,7 +277,7 @@ LUTM_template[is.na(LUTM_template)]<-namavariabel
         if (i==1){
           matrix_H[[i]]<-NULL
         }else{
-          matrix_H[[i]]<-rbind(matrix(0,nrow=jumlahvariabel,ncol=1),as.matrix(landCover[(diagonalVariabel_pre!= 0),i])*0)
+          matrix_H[[i]]<-rbind(matrix(0,nrow=jumlahvariabel,ncol=1),as.matrix(landCover[(diagonalVariabel_pre!= 0),i])*0.1)
         }
       }
       
