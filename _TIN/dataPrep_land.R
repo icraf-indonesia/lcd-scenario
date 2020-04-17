@@ -328,7 +328,7 @@ landScen3_findem <-landScen1_findem+landScen2_findem
 landScen3_inputLandCover<-landScen1_inputLandCover+landScen2_inputLandCover
 # landScen3_LUTM_template<-landScen1_LUTM_template
 
-## aggreaget LUTM_template
+## aggregate LUTM_template
 landScen3_LUTM_template<-matrix(0, nrow=23, ncol=23)
 landScen3_LUTM_template[is.na(landScen1_LUTM_template)]<-NA
 landScen3_LUTM_template[is.na(landScen2_LUTM_template)]<-NA

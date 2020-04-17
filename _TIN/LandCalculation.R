@@ -312,20 +312,29 @@ LUTM_template[is.na(LUTM_template)]<-namavariabel
       # constraint 2: semua variabel yang mengisi diagonal LUTM (tupla yg tidak berubah) >= sekian persen tupla di tahun berikutnya, 
       #               maka matriks G adalah matriks berisi 0 dan 1 (di mana 1 diberikan untuk variabel diagonal) dan matriks H adalah tupla2 * persentase minimum
       
-      # analyze historical LUTM to decide which assumption to use for the inequality constraints
+      # # nama variabel diagonal LUTM
+      # diagonalVariabel<-matrix(NA, ncol=1, nrow=ncol(LUTM_template))
+      # for (i in 1:ncol(LUTM_template)){
+      #   diagonalVariabel[i,1]<-LUTM_template[i,i]
+      # }
+      # diagonalVariabel<-diagonalVariabel[!(diagonalVariabel==0),]
+      # 
+      # # TPM Markov
       # LUTMProp_his<-matrix(nrow=nrow(LUTM_his), ncol=ncol(LUTM_his))
       # for (i in 1:ncol(LUTMProp_his)){
       #   LUTMProp_his[,i]<-LUTM_his[,i]/landCover_his[i,1]   #proporsi semua elemen LUTM dibagi tupla tahun kedua
       # }
       # LUTMProp_his[is.nan(LUTMProp_his)]<-0
-      # LUTMProp_his<-LUTMProp_his*0.3  #0.9 dari proporsi
       # 
-      # ## cari nama variabel diagonal LUTM
-      # diagonalVariabel_pre<-matrix(NA, ncol=1, nrow=ncol(LUTM_template))
-      # for (i in 1:ncol(LUTM_template)){
-      #   diagonalVariabel_pre[i,1]<-LUTM_template[i,i]
+      # # get TPM markov 
+      # diagonalProp<-matrix(NA, ncol=1, nrow=ncol(LUTMProp_his))
+      # for (i in 1:ncol(LUTMProp_his)){
+      #   diagonalProp[i,1]<-LUTMProp_his[i,i]
       # }
-      # diagonalVariabel<-diagonalVariabel_pre[!(diagonalVariabel_pre==0),]
+      # diagonalProp<-diagonalProp[!(diagonalProp==0),]
+      # 
+      # diagonalProp<-diagonalProp*0.3  #0.9 dari proporsi
+      # 
       # 
       # ## buat matrix G constraint 1 & 2
       # matrix_G<-rbind(diag(nrow=(jumlahvariabel)), matrix(0, nrow=length(diagonalVariabel),ncol=jumlahvariabel))
@@ -412,6 +421,9 @@ for (i in 1:nrow(emissionBAU)){
   }
 }
 
+#### tes cari emission per sektor dari LDM proporsi
+emissionLC<-colSums(emissionTable[[2]])
+emissionSector<-LDMProp_his%*%emissionLC
 
 
 ################################## (II) PERHITUNGAN SKENARIO INTERVENSI #########################################
