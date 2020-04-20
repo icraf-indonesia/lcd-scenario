@@ -456,10 +456,15 @@ ggplot(data=scenarioAllResult, aes(x=Year, y=CummulativeEmissionIntensity, group
 scenarioAllResult$type <- "SCENARIO"
 bauAllResult$type<-"BAU"
 comparison<-rbind(scenarioAllResult,bauAllResult)
-for (i in colnames(comparisonBAUScenario))
-ggplot(comparisonBAUScenario, aes(x=Year, y=CummulativeEmission, group=type))+
-  geom_line(aes(color=type))+
-  geom_point(aes(color=type))+
-  labs(x="Tahun", y="emisi kumulatif")+
-  ggtitle("Grafik Kumulatif Emisi")+
-  theme(plot.title = element_text(hjust = 0.5))
+for (i in as.character(colnames(comparison[,-c(1,8)]))){
+  eval(parse(text=paste0('plot',i,'<-ggplot(comparison, aes(x=Year, y=',i,', group=type))+
+      geom_line(aes(color=type))+
+      geom_point(aes(color=type))+
+      labs(x="Tahun", y="',i,'")+
+      ggtitle("Grafik ',i,'")+
+      theme(plot.title = element_text(hjust = 0.5))'
+  )))
+}
+
+
+###### END: BAU & intervention comparison ####

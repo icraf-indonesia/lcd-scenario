@@ -108,6 +108,7 @@ functionSatelliteImpact <- function(type = "energy",
     impact$consumption[,4:ncol(impact$consumption)] <- impact$consumption[,4:ncol(impact$consumption)] * impact$consumption[, 3]
     if(!is.null(additional_satellite)){
       impact$consumption[,4:ncol(impact$consumption)]<-impact$consumption[,4:ncol(impact$consumption)]+additional_satellite[,4:ncol(additional_satellite)]
+      impact$consumption[,3]<-rowSums(impact$consumption[,4:ncol(impact$consumption)])
     }
     
     # checking the order of factor emission 
@@ -218,15 +219,26 @@ functionSatelliteLand2<- function(type=NULL,
     # set multiiplier for making matrix H
     
     if(advanceMode==TRUE){
-      multiplier = matrix(percentage, nrow=ncol(TPM), ncol=1)
+      multiplier <- matrix(percentage, nrow=ncol(TPM), ncol=1)
     } else {
       if(runNum==1){ multiplier = 0.8
-      } else if (runNum ==2) {multiplier = 0.5
-      } else if (runNum == 3) {multiplier = 0.3
-      } else if (runNum == 4) {multiplier = 0.1
-      } else if (runNum=5) {multiplier == 0
-      } else if (runNum=6) {
-        LUTMTemplate = matrix(0, nrow=nrow(LUTMTemplate_his),ncol=ncol(LUTMTemplate_his))
+      } else if (runNum ==2) {multiplier <- 0.5
+      } else if (runNum == 3) {multiplier <- 0.3
+      } else if (runNum == 4) {multiplier <- 0.1
+      } else if (runNum==5) {multiplier <- 0
+      } else if (runNum==6) {
+        multiplier <- 0.1
+        LUTMTemplate <- matrix(NA, nrow=nrow(LUTMTemplate_his),ncol=ncol(LUTMTemplate_his))
+        rownames(LUTMTemplate)<-rownames(LUTMTemplate_his)
+        colnames(LUTMTemplate)<-colnames(LUTMTemplate_his)
+        for (i in 1:nrow(landCover_his)){
+          if (sum(landCover_his[i,])==0){
+            LUTMTemplate[i,]<-matrix(0,ncol=ncol(LUTMTemplate_his))    #LUTMTemplate bisa diedit di interface
+            LUTMTemplate[,i]<-matrix(0,nrow=ncol(LUTMTemplate_his))
+          } else {}
+        }
+        # LUTMTemplate<-read.csv("_TIN/data/JaBar/LUTMTemplate_his2.csv", header=TRUE)
+        LUTMTemplate[is.na(LUTMTemplate)]<-paste0("x",1:length(LUTMTemplate[is.na(LUTMTemplate)]))
       }
     }
     
@@ -718,49 +730,35 @@ if(any(unlist(sapply(bauSeriesOfImpactLand1,'[[', "landCover"))<0)==TRUE){
 
 
 # LUTM Projection 
+projectionYear <- initialYear
+listYear <- paste0("y", ioPeriod)
 
-
-for (i in 1:5){   # 5 tipe yg akan dirun otomatis
-  
-  projectionYear <- initialYear
-  listYear <- paste0("y", ioPeriod)
-  
-  for(step in 1:(iteration+1)){
+for(step in 1:(iteration+1)){
+  for (i in 1:6){   # 5 tipe yg akan dirun otomatis
     timeStep <- paste0("y", projectionYear)
     eval(parse(text=paste0(
       "bauSeriesOfImpactLand2$",timeStep,"<-tryCatch({
-      functionSatelliteLand2 (type ='projected',
-                              landCoverProjection = as.matrix(bauSeriesOfImpactLand1[['",timeStep,"']][['landCover']][['luas.land.use']]) ,
-                              landCoverProjectionMin=  as.matrix(bauSeriesOfImpactLand1[[paste0('y',",projectionYear,"-1)]][['landCover']][['luas.land.use']]),
-                              LUTMTemplate = LUTMTemplate_his, 
-                              advanceMode = FALSE,
-                              runNum =",i," , 
-                              GDP=as.matrix(bauSeriesOfGDP$",timeStep,")
-      )
-    }, warning = function (a){NA}, error = function(b){NA})"
+    functionSatelliteLand2 (type ='projected',
+                            landCoverProjection = as.matrix(bauSeriesOfImpactLand1[['",timeStep,"']][['landCover']][['luas.land.use']]) ,
+                            landCoverProjectionMin=  as.matrix(bauSeriesOfImpactLand1[[paste0('y',",projectionYear,"-1)]][['landCover']][['luas.land.use']]),
+                            LUTMTemplate = LUTMTemplate_his, 
+                            advanceMode = FALSE,
+                            runNum =",i," , 
+                            GDP=as.matrix(bauSeriesOfGDP$",timeStep,")
+    )
+  }, warning = function (a){NA}, error = function(b){NA})"
     )))
-    listYear <- c(listYear, timeStep)
-    projectionYear <- initialYear+step  
-  }
-  
-  if(any(is.na(unlist(bauSeriesOfImpactLand2)))==FALSE){  
-    if(i==1){
-      print("use constraint 1 to make LUTM")
-    } else if (i==2){
-      print("use constraint 2 to make LUTM")
-    } else if (i==3){
-      print("use constraint 3 to make LUTM")
-    } else if (i ==4){
-      print("use constraint 4 to make LUTM")
-    } else if (i == 5){
-      print("use no constraint to make LUTM")
+    if(any(is.na(bauSeriesOfImpactLand2[[timeStep]]))==FALSE){
+      print(paste0("use constraint ", i ," to make LUTM ",timeStep))
+      break
+    } else {
+      if(i==6){
+        print(paste0("tidak berhasil menghitung LUTM ",timeStep))
+      } 
     }
-    break
-  } else {
-    if(i==5){
-      print("tidak berhasil menghitung LUTM")
-    } 
   }
+  listYear <- c(listYear, timeStep)
+  projectionYear <- initialYear+step
 }
 
 # jika tidak berhasil menghitung LUTM, force to enter advanceMode pada UI (spt pada land cover)
@@ -982,15 +980,21 @@ for(t in 0:iteration){
   eval(parse(text=paste0("bauSeriesOfEmissionBySector$y", t_curr, " <- add_MEcons + add_MWdisp + add_MF + add_MLand")))
 }
 
-resultTotalGDP <- colSums(bauSeriesOfGDP[,2:(ncol(bauSeriesOfGDP)-1)])
+# resultTotalGDP <- colSums(bauSeriesOfGDP[,2:(ncol(bauSeriesOfGDP)-1)])
 bauAllResult <- subset(resultTotalEmission, select=c(Year, TotalEmission, CummulativeEmission))
-bauAllResult <- cbind(bauAllResult, resultTotalGDP)
+# bauAllResult <- cbind(bauAllResult, resultTotalGDP)
+bauAllResult$resultTotalGDP<-colSums(bauSeriesOfGDP[,2:(ncol(bauSeriesOfGDP)-1)])
+bauAllResult$CummulativeGDP <- cumsum(bauAllResult$resultTotalGDP)
 bauAllResult$EmissionIntensity <- bauAllResult$TotalEmission / bauAllResult$resultTotalGDP
+bauAllResult$CummulativeEmissionIntensity <-cumsum(bauAllResult$EmissionIntensity)
+
 
 ggplot(data=bauAllResult, aes(x=Year, y=TotalEmission, group=1)) + geom_line() + geom_point()
 ggplot(data=bauAllResult, aes(x=Year, y=CummulativeEmission, group=1)) + geom_line() + geom_point()
 ggplot(data=bauAllResult, aes(x=Year, y=EmissionIntensity, group=1)) + geom_line() + geom_point()
 ggplot(data=bauAllResult, aes(x=Year, y=resultTotalGDP, group=1)) + geom_line() + geom_point()
+ggplot(data=bauAllResult, aes(x=Year, y=CummulativeGDP, group=1)) + geom_line() + geom_point()
+ggplot(data=bauAllResult, aes(x=Year, y=CummulativeEmissionIntensity, group=1)) + geom_line() + geom_point()
 
 
 #####END : BAU projection visualization ####
