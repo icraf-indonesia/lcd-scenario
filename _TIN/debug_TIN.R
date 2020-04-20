@@ -185,9 +185,11 @@ functionSatelliteLand1<-function(type=NULL,
 
 
 # Function for calculating LUTM
+# Land cover yang dihasilkan pada fungsi ini adalah land cover proyeksi + input land cover skenario
 
 functionSatelliteLand2<- function(type=NULL,
                                  landCoverProjection = NULL,  #proyeksi land cover BAU atau skenario
+                                 landCoverProjectionMin=NULL,
                                  inputLandCover=NULL,  #perubahan land cover skenario aksi
                                  LUTMTemplate=NULL,
                                  advanceMode=FALSE, 
@@ -212,6 +214,21 @@ functionSatelliteLand2<- function(type=NULL,
     impact$LUTM<-LUTM_his
     
   } else{
+    
+    # set multiiplier for making matrix H
+    
+    if(advanceMode==TRUE){
+      multiplier = matrix(percentage, nrow=ncol(TPM), ncol=1)
+    } else {
+      if(runNum==1){ multiplier = 0.8
+      } else if (runNum ==2) {multiplier = 0.5
+      } else if (runNum == 3) {multiplier = 0.3
+      } else if (runNum == 4) {multiplier = 0.1
+      } else if (runNum=5) {multiplier == 0
+      } else if (runNum=6) {
+        LUTMTemplate = matrix(0, nrow=nrow(LUTMTemplate_his),ncol=ncol(LUTMTemplate_his))
+      }
+    }
     
     # landCover 
     if(!is.null(inputLandCover)){
@@ -257,17 +274,17 @@ functionSatelliteLand2<- function(type=NULL,
     if (is.null(additionalE)){
       impact$matrixE<-impact$matrixE
     } else{
-      impact$matrixE<- rbind(impact$matrixE, additionalE)
+      impact$matrixE<- rbind(impact$matrixE, as.matrix(additionalE))
     }
     
     
     # matrix F
-    impact$matrixF<-rbind(as.matrix(bauSeriesOfImpactLand2[[paste0("y", projectionYear-1)]][["landCover"]][["luas.land.use"]]),as.matrix(impact$landCover))
+    impact$matrixF<-rbind(landCoverProjectionMin,as.matrix(impact$landCover))
     impact$matrixF<- as.matrix(impact$matrixF[!(rowSums(impact$matrixF) == 0),])
     if (is.null(additionalF)){
       impact$matrixF<-impact$matrixF
     } else{
-      impact$matrixF<- rbind(impact$matrixF, additionalF)
+      impact$matrixF<- rbind(impact$matrixF, as.matrix(additionalF))
     }
     
     # check all diagonal variable names
@@ -286,7 +303,7 @@ functionSatelliteLand2<- function(type=NULL,
     if (is.null(additionalG)){
       impact$matrixG<-impact$matrixG
     } else{
-      impact$matrixG<- rbind(impact$matrixG, additionalG)
+      impact$matrixG<- rbind(impact$matrixG, as.matrix(additionalG))
     }
     
     # get TPM value for each diagonal variable
@@ -297,26 +314,14 @@ functionSatelliteLand2<- function(type=NULL,
     }
     diagTPM<-as.matrix(diagTPM[!(diagTPM==0),])
     
-    # condition for making matrix H
-    
-    if(advanceMode==TRUE){
-      multiplier = matrix(percentage, nrow=nrow(diagTPM), ncol=1)
-    } else {
-      if(runNum==1){ multiplier = 0.8
-      } else if (runNum ==2) {multiplier = 0.5
-      } else if (runNum == 3) {multiplier = 0.3
-      } else if (runNum == 4) {multiplier = 0.1
-      } else {multiplier == 0}
-    }
-    
     # matrix H
     diagTPM <- diagTPM*multiplier 
-    impact$matrixH<-rbind(matrix(0,nrow=jumlahVariabel,ncol=1),as.matrix(diagTPM*as.matrix(bauSeriesOfImpactLand2[[paste0("y", projectionYear-1)]][["landCover"]][['luas.land.use']][landCover_his!=0])))
+    impact$matrixH<-rbind(matrix(0,nrow=jumlahVariabel,ncol=1),as.matrix(diagTPM*landCoverProjectionMin[landCover_his!=0]))
     
     if (is.null(additionalH)){
       impact$matrixH<-impact$matrixH
     } else{
-      impact$matrixH<- rbind(impact$matrixH, additionalH)
+      impact$matrixH<- rbind(impact$matrixH, as.matrix(additionalH))
     }
     
     
@@ -377,53 +382,53 @@ functionSatelliteLand2<- function(type=NULL,
   return(impact)
 }
 
-# function for calculating LUTMTemplate, matrix G, & matrix H
+# function for calculating new LUTMTemplate, additional matrix G, additional matrix H, & delta land Cover (inputLandCover)
 functionSatelliteLand3<-function (inputLandScen = NULL,
                                   timeScen = timeStep){
   impact<-list()
   
-  # calculate scenario LUTM Template
-  impact$LUTMTemplate<-LUTMTemplate_his
-  impact$LUTMTemplate[impact$LUTMTemplate!="0"]<-NA
-  rownames(impact$LUTMTemplate)<-colnames(impact$LUTMTemplate)
-  for (i in 1:nrow(inputLandScen)){
-    impact$LUTMTemplate[paste0(inputLandScen[i,1]), paste0(inputLandScen[i,2])]<- NA
+  if (is.null(inputLandScen)){
+    impact$LUTMTemplate<-LUTMTemplate_his
+    impact$additionalG<-NULL
+    impact$additionalH<-NULL
+    impact$inputLandCover<-NULL
+  } else{
+    # calculate scenario LUTM Template
+    impact$LUTMTemplate<-LUTMTemplate_his
+    impact$LUTMTemplate[impact$LUTMTemplate!="0"]<-NA
+    rownames(impact$LUTMTemplate)<-colnames(impact$LUTMTemplate)
+    for (i in 1:nrow(inputLandScen)){
+      impact$LUTMTemplate[paste0(inputLandScen[i,1]), paste0(inputLandScen[i,2])]<- NA
+    }
+    impact$LUTMTemplate[is.na(impact$LUTMTemplate)]<-paste0("x",1:length(impact$LUTMTemplate[is.na(impact$LUTMTemplate)]))
+    
+    # additional G & additional H
+    impact$additionalG<-matrix(0,ncol=length(impact$LUTMTemplate[impact$LUTMTemplate!=0]), nrow=nrow(inputLandScen))
+    impact$additionalH<-matrix(ncol=1, nrow=nrow(inputLandScen))
+    
+    colnames(impact$additionalG)<-as.character(impact$LUTMTemplate[impact$LUTMTemplate!=0])
+    
+    for (i in 1:nrow(inputLandScen)){
+      impact$additionalG[i,impact$LUTMTemplate[paste0(inputLandScen[i,1]), paste0(inputLandScen[i,2])]]<-1
+      impact$additionalH[i,1]<-inputLandScen[i,paste0(timeScen)]
+    }
+    
+    # inputLandCover
+    impact$inputLandCover<- matrix(0,ncol=1, nrow=23)
+    rownames(impact$inputLandCover)<-colnames(impact$LUTMTemplate)
+    
+    for (landCoverClass in unique(inputLandScen[,2])){
+      impact$inputLandCover[paste(landCoverClass),]<-sum(inputLandScen[inputLandScen[,2]==paste(landCoverClass), timeScen]) # pertambahan luas <- positif jumlah total luas kelas tupla yang sama di tahun akhir
+    } 
+    
+    for (landCoverClass in as.character(unique(inputLandScen[,1]))){
+      impact$inputLandCover[landCoverClass,]<--sum(inputLandScen[inputLandScen[,1]==paste(landCoverClass), timeScen]) # penurunan luas <- negatif jumlah total luas kelas tupla yang sama tahun akhir
+    } 
   }
-  impact$LUTMTemplate[is.na(impact$LUTMTemplate)]<-paste0("x",1:length(impact$LUTMTemplate[is.na(impact$LUTMTemplate)]))
-  
-  # additional G & additional H
-  impact$additionalG<-matrix(0,ncol=length(impact$LUTMTemplate[impact$LUTMTemplate!=0]), nrow=nrow(inputLandScen))
-  impact$additionalH<-matrix(ncol=1, nrow=nrow(inputLandScen))
-  
-  colnames(impact$additionalG)<-as.character(impact$LUTMTemplate[impact$LUTMTemplate!=0])
-  
-  for (i in 1:nrow(inputLandScen)){
-    impact$additionalG[i,impact$LUTMTemplate[paste0(inputLandScen[i,1]), paste0(inputLandScen[i,2])]]<-1
-    impact$additionalH[i,1]<-inputLandScen[i,paste0(timeScen)]
-  }
-  
-  # inputLandCover
-  impact$inputLandCover<- matrix(0,ncol=1, nrow=23)
-  rownames(impact$inputLandCover)<-colnames(impact$LUTMTemplate)
-  
-  for (landCoverClass in unique(inputLandScen[,2])){
-    impact$inputLandCover[paste(landCoverClass),]<-sum(inputLandScen[inputLandScen[,2]==paste(landCoverClass), timeScen]) # pertambahan luas <- positif jumlah total luas kelas tupla yang sama di tahun akhir
-  } 
-  
-  for (landCoverClass in as.character(unique(inputLandScen[,1]))){
-    impact$inputLandCover[landCoverClass,]<--sum(inputLandScen[inputLandScen[,1]==paste(landCoverClass), timeScen]) # penurunan luas <- negatif jumlah total luas kelas tupla yang sama tahun akhir
-  } 
   return (impact)
 }
 
-
-
-
-
-
-
 ###END: initiate ####
-
 
 ###BEGIN: regional economic impact analysis & historical emission from satellite account####
 # Direct Backward Linkage
@@ -571,6 +576,7 @@ analysisCPI <- t(t(ioAddedValue) / ioTotalOutput)
 ###END: analysis ####
 
 
+
 ###BEGIN: BAU projection####
 
 # Series of GPD & Output projection
@@ -592,17 +598,18 @@ bauSeriesOfImpactLand2<-list()
 
 
 # Historical consumption and emission data
-bauSeriesOfIntermediateDemand$y2015 <- matrixIoIntermediateDemand
-bauSeriesOfAddedValue$y2015 <- matrixIoAddedValue
-bauSeriesOfFinalDemandComponent$y2015 <- matrixIoFinalDemand
-bauSeriesOfImpactLabour$y2015 <- functionSatelliteImpact('labour', satellite = satelliteLabour, matrix_output = as.matrix(ioTotalOutput))
-bauSeriesOfImpactEnergy$y2015 <- functionSatelliteImpact('energy', satellite = satelliteEnergy, matrix_output = as.matrix(ioTotalOutput), emission_factor = emissionFactorEnergy)
-bauSeriesOfImpactWaste$y2015 <- functionSatelliteImpact('waste', satellite = satelliteWaste, matrix_output = as.matrix(ioTotalOutput), emission_factor = emissionFactorWaste)
-bauSeriesOfImpactAgriculture$y2015 <- functionSatelliteImpact('agriculture', satellite = satelliteAgriculture, matrix_output = as.matrix(ioTotalOutput), emission_factor = emissionFactorAgriculture)
+eval(parse(text=paste0("bauSeriesOfIntermediateDemand$y",ioPeriod," <- matrixIoIntermediateDemand")))
+eval(parse(text=paste0("bauSeriesOfAddedValue$y",ioPeriod," <- matrixIoAddedValue")))
+eval(parse(text=paste0("bauSeriesOfFinalDemandComponent$y",ioPeriod," <- matrixIoFinalDemand")))
+eval(parse(text=paste0("bauSeriesOfImpactLabour$y",ioPeriod," <- functionSatelliteImpact('labour', satellite = satelliteLabour, matrix_output = as.matrix(ioTotalOutput))")))
+eval(parse(text=paste0("bauSeriesOfImpactEnergy$y",ioPeriod,"<- functionSatelliteImpact('energy', satellite = satelliteEnergy, matrix_output = as.matrix(ioTotalOutput), emission_factor = emissionFactorEnergy)")))
+eval(parse(text=paste0("bauSeriesOfImpactWaste$y",ioPeriod," <- functionSatelliteImpact('waste', satellite = satelliteWaste, matrix_output = as.matrix(ioTotalOutput), emission_factor = emissionFactorWaste)")))
+eval(parse(text=paste0("bauSeriesOfImpactAgriculture$y",ioPeriod,"<- functionSatelliteImpact('agriculture', satellite = satelliteAgriculture, matrix_output = as.matrix(ioTotalOutput), emission_factor = emissionFactorAgriculture)")))
+
 # historical LRC, land requirement, & land cover 
-bauSeriesOfImpactLand1$y2015<-functionSatelliteLand1(type= 'historis', matrix_output= as.matrix(ioTotalOutput))
+eval(parse(text=paste0("bauSeriesOfImpactLand1$y",ioPeriod,"<-functionSatelliteLand1(type= 'historis', matrix_output= as.matrix(ioTotalOutput))")))
 # LSEI
-bauSeriesOfImpactLand2$y2015  <- functionSatelliteLand2(type="historis",carbonStock=carbonStock_his, GDP= as.matrix(bauSeriesOfGDP$y2015) )
+eval(parse(text=paste0("bauSeriesOfImpactLand2$y",ioPeriod," <- functionSatelliteLand2(type='historis',carbonStock=carbonStock_his, GDP= as.matrix(bauSeriesOfGDP$y",ioPeriod,") )")))
 
 growthRateSeries <- growthRate
 growthRateSeries$Lap_usaha <- NULL
@@ -724,6 +731,7 @@ for (i in 1:5){   # 5 tipe yg akan dirun otomatis
       "bauSeriesOfImpactLand2$",timeStep,"<-tryCatch({
       functionSatelliteLand2 (type ='projected',
                               landCoverProjection = as.matrix(bauSeriesOfImpactLand1[['",timeStep,"']][['landCover']][['luas.land.use']]) ,
+                              landCoverProjectionMin=  as.matrix(bauSeriesOfImpactLand1[[paste0('y',",projectionYear,"-1)]][['landCover']][['luas.land.use']]),
                               LUTMTemplate = LUTMTemplate_his, 
                               advanceMode = FALSE,
                               runNum =",i," , 
@@ -758,6 +766,7 @@ for (i in 1:5){   # 5 tipe yg akan dirun otomatis
 # jika tidak berhasil menghitung LUTM, force to enter advanceMode pada UI (spt pada land cover)
 
 #####END : BAU projection ####
+
 #####BEGIN : BAU projection visualization ####
 # 1. GDP (ind. 1)
 resultGDP <- data.frame(year = 0, sector = "", category="", GDP = 0, stringsAsFactors = FALSE)
@@ -973,7 +982,7 @@ for(t in 0:iteration){
   eval(parse(text=paste0("bauSeriesOfEmissionBySector$y", t_curr, " <- add_MEcons + add_MWdisp + add_MF + add_MLand")))
 }
 
-resultTotalGDP <- colSums(bauSeriesOfGDP[,2:16])
+resultTotalGDP <- colSums(bauSeriesOfGDP[,2:(ncol(bauSeriesOfGDP)-1)])
 bauAllResult <- subset(resultTotalEmission, select=c(Year, TotalEmission, CummulativeEmission))
 bauAllResult <- cbind(bauAllResult, resultTotalGDP)
 bauAllResult$EmissionIntensity <- bauAllResult$TotalEmission / bauAllResult$resultTotalGDP
@@ -985,496 +994,4 @@ ggplot(data=bauAllResult, aes(x=Year, y=resultTotalGDP, group=1)) + geom_line() 
 
 
 #####END : BAU projection visualization ####
-###BEGIN: Scenario energy & transportation simulation####
-# ENERGI: PLTM on grid
-scenario1EnergyFD <- read.table("D:/My_Development/RProjects/lcd-scenario/_DB/17_final_demand_proyeksi_sken1_d.csv", header = T, sep = ",")
-scenario1SeriesOfOutput <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-scenario1SeriesOfGDP <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-proportionGDP <- bauSeriesOfGDP$y2015 / ioTotalOutput
-
-# 1. calculate new output and satellite based on intervention on final demand
-scenario1SeriesOfImpactEnergy <- list()
-for(i in 0:iteration){
-  t_curr <- initialYear + i
-  eval(parse(text=paste0("scenarioFD <- scenario1EnergyFD$y", t_curr))) 
-  
-  scenarioOutput <- ioLeontiefInverse %*% scenarioFD
-  scenario1SeriesOfOutput <- cbind(scenario1SeriesOfOutput, scenarioOutput)
-  
-  scenarioGDP <- scenarioOutput * proportionGDP
-  scenario1SeriesOfGDP <- cbind(scenario1SeriesOfGDP, scenarioGDP)
-  
-  eval(parse(text= paste0("scenario1SeriesOfImpactEnergy$y", t_curr, " <- functionSatelliteImpact('energy', satellite = satelliteEnergy, matrix_output = as.matrix(scenarioOutput), emission_factor = emissionFactorEnergy)")))
-}
-colnames(scenario1SeriesOfOutput)[3:17] <- as.character(listYear[2:16])
-colnames(scenario1SeriesOfGDP)[3:17] <- as.character(listYear[2:16])
-
-# 2. next do intervention on satellite
-scenario1EnergySE1 <- read.table("D:/My_Development/RProjects/lcd-scenario/_DB/18_persentase_bahan_bakar_sken1_tahap1.csv", header = F, sep = ",")
-for(t in 2017:2026){
-  scenarioConsumption <- scenario1SeriesOfImpactEnergy[[paste0("y", t)]][["consumption"]]
-  scenario1SeriesOfImpactEnergy[[paste0("y", t)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * scenario1EnergySE1
-}
-
-scenario1EnergySE2 <- read.table("D:/My_Development/RProjects/lcd-scenario/_DB/18_persentase_bahan_bakar_sken1_tahap2.csv", header = F, sep = ",")
-for(u in 2027:2030){
-  scenarioConsumption <- scenario1SeriesOfImpactEnergy[[paste0("y", u)]][["consumption"]]
-  scenario1SeriesOfImpactEnergy[[paste0("y", u)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * scenario1EnergySE2
-}
-
-# Energy cons
-resultS1EnergyConsumption <- scenario1SeriesOfImpactEnergy[[1]][[1]]
-resultS1EnergyConsumption$year <- initialYear
-resultS1EnergyConsumption <- resultS1EnergyConsumption[, c("year", names(scenario1SeriesOfImpactEnergy[[1]][[1]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario1SeriesOfImpactEnergy[[t+1]][[1]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultS1EnergyConsumption)]
-  resultS1EnergyConsumption <- data.frame(rbind(resultS1EnergyConsumption, add.row), stringsAsFactors = FALSE)
-}
-names(resultS1EnergyConsumption)[2:3] <- c("id.sector", "sector")
-
-# Energy emission 
-resultS1EnergyEmission <- scenario1SeriesOfImpactEnergy[[1]][[2]]
-resultS1EnergyEmission$year <- initialYear
-resultS1EnergyEmission <- resultS1EnergyEmission[, c("year", names(scenario1SeriesOfImpactEnergy[[1]][[2]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario1SeriesOfImpactEnergy[[t+1]][[2]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultS1EnergyEmission)]
-  resultS1EnergyEmission <- data.frame(rbind(resultS1EnergyEmission, add.row), stringsAsFactors = FALSE)
-}
-names(resultS1EnergyEmission)[2:3] <- c("id.sector", "sector")
-
-resultS1TotalEmission <- data.frame(Year=initialYear:finalYear)
-emissionEnergyConsumption <- numeric()
-emissionWasteDisposal <- numeric()
-emissionFertilizer <- numeric()
-for(t in 0:iteration){
-  t_curr <- initialYear + t
-  add_MEcons <- sum(resultS1EnergyEmission[resultS1EnergyEmission$year==t_curr, "Temission"])
-  add_MWdisp <- sum(resultWasteEmission[resultWasteEmission$year==t_curr, "Temission"])
-  add_MF <- sum(resultFertilizerEmission[resultFertilizerEmission$year==t_curr, "Temission"])
-  emissionEnergyConsumption <- c(emissionEnergyConsumption, add_MEcons)
-  emissionWasteDisposal <- c(emissionWasteDisposal, add_MWdisp)
-  emissionFertilizer <- c(emissionFertilizer, add_MF)
-}
-resultS1TotalEmission$emissionEnergyCons <- emissionEnergyConsumption
-resultS1TotalEmission$emissionWasteDisp <- emissionWasteDisposal
-resultS1TotalEmission$emissionFert <- emissionFertilizer
-resultS1TotalEmission$TotalEmission <- rowSums(resultS1TotalEmission[, 2:ncol(resultS1TotalEmission)])
-resultS1TotalEmission$CummulativeEmission <- cumsum(resultS1TotalEmission$TotalEmission)
-
-# BAU emission[economic sector, years]
-scenario1SeriesOfEmissionBySector <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-for(t in 0:iteration){
-  t_curr <- initialYear + t
-  add_MEcons <- resultS1EnergyEmission[resultS1EnergyEmission$year==t_curr, "Temission"]
-  add_MWdisp <- resultWasteEmission[resultWasteEmission$year==t_curr, "Temission"]
-  add_MF <- resultFertilizerEmission[resultFertilizerEmission$year==t_curr, "Temission"]
-  eval(parse(text=paste0("scenario1SeriesOfEmissionBySector$y", t_curr, " <- add_MEcons + add_MWdisp + add_MF")))
-}
-
-resultS1TotalGDP <- colSums(scenario1SeriesOfGDP[,3:17])
-scenario1Result <- subset(resultS1TotalEmission, select=c(Year, TotalEmission, CummulativeEmission))
-scenario1Result <- cbind(scenario1Result, resultS1TotalGDP)
-scenario1Result$EmissionIntensity <- scenario1Result$TotalEmission / scenario1Result$resultS1TotalGDP
-
-ggplot(data=scenario1Result, aes(x=Year, y=TotalEmission, group=1)) + geom_line() + geom_point()
-ggplot(data=scenario1Result, aes(x=Year, y=CummulativeEmission, group=1)) + geom_line() + geom_point()
-ggplot(data=scenario1Result, aes(x=Year, y=EmissionIntensity, group=1)) + geom_line() + geom_point()
-ggplot(data=scenario1Result, aes(x=Year, y=resultTotalGDP, group=1)) + geom_line() + geom_point()
-
-
-###END: Energy & transportation####
-
-
-###BEGIN: Scenario waste simulation####
-# Scenario 1
-
-###END: Waste####
-
-
-###BEGIN: Scenario fertilizer simulation####
-# ENERGI: PLTM on grid
-scenario1EnergyFD <- read.table("D:/My_Development/RProjects/lcd-scenario/_DB/17_final_demand_proyeksi_sken1_d.csv", header = T, sep = ",")
-scenario1SeriesOfOutput <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-scenario1SeriesOfGDP <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-proportionGDP <- bauSeriesOfGDP$y2015 / ioTotalOutput
-
-# 1. calculate new output and satellite based on intervention on final demand
-scenario1SeriesOfImpactEnergy <- list()
-for(i in 0:iteration){
-  t_curr <- initialYear + i
-  eval(parse(text=paste0("scenarioFD <- scenario1EnergyFD$y", t_curr))) 
-  
-  scenarioOutput <- ioLeontiefInverse %*% scenarioFD
-  scenario1SeriesOfOutput <- cbind(scenarioSeriesOfOutput, scenarioOutput)
-  
-  scenarioGDP <- scenarioOutput * proportionGDP
-  scenario1SeriesOfGDP <- cbind(scenarioSeriesOfGDP, scenarioGDP)
-  
-  eval(parse(text= paste0("scenario1SeriesOfImpactEnergy$y", t_curr, " <- functionSatelliteImpact('energy', satellite = satelliteEnergy, matrix_output = as.matrix(scenarioOutput), emission_factor = emissionFactorEnergy)")))
-}
-
-# 2. next do intervention on satellite
-scenario1EnergySE1 <- read.table("D:/My_Development/RProjects/lcd-scenario/_DB/18_persentase_bahan_bakar_sken1_tahap1.csv", header = F, sep = ",")
-for(t in 2017:2026){
-  scenarioConsumption <- scenario1SeriesOfImpactEnergy[[paste0("y", t)]][["consumption"]]
-  scenario1SeriesOfImpactEnergy[[paste0("y", t)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * scenario1EnergySE1
-}
-
-scenario1EnergySE2 <- read.table("D:/My_Development/RProjects/lcd-scenario/_DB/18_persentase_bahan_bakar_sken1_tahap2.csv", header = F, sep = ",")
-for(u in 2027:2030){
-  scenarioConsumption <- scenario1SeriesOfImpactEnergy[[paste0("y", u)]][["consumption"]]
-  scenario1SeriesOfImpactEnergy[[paste0("y", u)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * scenario1EnergySE2
-}
-
-
-
-
-
-scenarioEnergyFD1 <- read.table("D:/My_Development/RProjects/lcd-scenario/raw/jabar_in_redcluwe/17_final_demand_proyeksi_sken1_d.csv", header = T, sep = ",")
-
-###END: fertilizer####
-
-
-###BEGIN: Scenario land-based simulation####
-# ENERGI: Skenario rehabilitasi lahan kritis menjadi hutan sekunder
-scenario1LandFD <- read.table("_TIN/landCalc/JaBar/landScen1_findem.csv", header = T, sep = ",")
-scenario1SeriesOfOutput <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-scenario1SeriesOfGDP <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-proportionGDP <- bauSeriesOfGDP$y2015 / ioTotalOutput
-
-# 1. calculate new output and satellite based on intervention on final demand
-scenario1SeriesOfImpactEnergy <- list()
-for(i in 0:iteration){
-  t_curr <- initialYear + i
-  eval(parse(text=paste0("scenarioFD <- scenario1LandFD$y", t_curr))) 
-  
-  scenarioOutput <- ioLeontiefInverse %*% scenarioFD
-  scenario1SeriesOfOutput <- cbind(scenarioSeriesOfOutput, scenarioOutput)
-  
-  scenarioGDP <- scenarioOutput * proportionGDP
-  scenario1SeriesOfGDP <- cbind(scenarioSeriesOfGDP, scenarioGDP)
-  
-  eval(parse(text= paste0("scenario1SeriesOfImpactEnergy$y", t_curr, " <- functionSatelliteImpact('energy', satellite = satelliteEnergy, matrix_output = as.matrix(scenarioOutput), emission_factor = emissionFactorEnergy)")))
-}
-
-# 2. intervensi satelit lahan
-
-
-
-
-
-
-scenarioEnergyFD1 <- read.table("D:/My_Development/RProjects/lcd-scenario/raw/jabar_in_redcluwe/17_final_demand_proyeksi_sken1_d.csv", header = T, sep = ",")
-
-###END: land-based####
-
-
-
-###BEGIN: Scenario waste-fertilizer simulation####
-# ENERGI: PLTM on grid
-scenario1CombFD <- read.table("D:/My_Development/RProjects/lcd-scenario/_AN/fd_limbah_pertanian.csv", header = T, sep = ",")
-ef_fert <- read.table("D:/My_Development/RProjects/lcd-scenario/_AN/EF_Scen2.csv", header = T, sep = ",")
-scenario1CombFD <- scenario1CombFD[,2:16] 
-colnames(scenario1CombFD) <- as.character(listYear[2:16])
-scenario1CombSeriesOfOutput <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-scenario1CombSeriesOfGDP <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-proportionGDP <- bauSeriesOfGDP$y2015 / ioTotalOutput
-
-# 1. calculate new output and satellite based on intervention on final demand
-scenario1CombSeriesOfImpactWaste <- list()
-scenario1CombSeriesOfImpactFertilizer <- list()
-for(i in 0:iteration){
-  t_curr <- initialYear + i
-  eval(parse(text=paste0("scenarioFD <- scenario1CombFD$y", t_curr))) 
-  
-  scenarioOutput <- ioLeontiefInverse %*% scenarioFD
-  scenario1CombSeriesOfOutput <- cbind(scenario1CombSeriesOfOutput, scenarioOutput)
-  
-  scenarioGDP <- scenarioOutput * proportionGDP
-  scenario1CombSeriesOfGDP <- cbind(scenario1CombSeriesOfGDP, scenarioGDP)
-  
-  eval(parse(text= paste0("scenario1CombSeriesOfImpactWaste$y", t_curr, " <- functionSatelliteImpact('waste', satellite = satelliteWaste, matrix_output = as.matrix(scenarioOutput), emission_factor = emissionFactorWaste)")))
-  eval(parse(text= paste0("scenario1CombSeriesOfImpactFertilizer$y", t_curr, " <- functionSatelliteImpact('agriculture', satellite = satelliteAgriculture, matrix_output = as.matrix(scenarioOutput), emission_factor = ef_fert)")))
-}
-colnames(scenario1CombSeriesOfOutput)[3:17] <- as.character(listYear[2:16])
-colnames(scenario1CombSeriesOfGDP)[3:17] <- as.character(listYear[2:16])
-
-# 2. next do intervention on satellite
-for(t in 2016:2030){
-  eval(parse(text= paste0("intervensi <- read.table('D:/My_Development/RProjects/lcd-scenario/_YK/raw/input_limbah/intervensi", t, ".csv', header = T, sep = ';')")))
-  scenarioConsumption <- scenario1CombSeriesOfImpactWaste[[paste0("y", t)]][["consumption"]]
-  scenario1CombSeriesOfImpactWaste[[paste0("y", t)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * intervensi[,3:18]
-}
-
-inter_fert <- read.table("D:/My_Development/RProjects/lcd-scenario/_AN/fert_scen.csv", header = T, sep = ",")
-for(u in 2016:2030){
-  scenarioConsumption <- scenario1CombSeriesOfImpactFertilizer[[paste0("y", u)]][["consumption"]]
-  scenario1CombSeriesOfImpactFertilizer[[paste0("y", u)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * inter_fert
-}
-
-# Energy cons
-resultCombFertConsumption <- scenario1CombSeriesOfImpactFertilizer[[1]][[1]]
-resultCombFertConsumption$year <- initialYear
-resultCombFertConsumption <- resultCombFertConsumption[, c("year", names(scenario1CombSeriesOfImpactFertilizer[[1]][[1]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario1CombSeriesOfImpactFertilizer[[t+1]][[1]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombFertConsumption)]
-  resultCombFertConsumption <- data.frame(rbind(resultCombFertConsumption, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombFertConsumption)[2:3] <- c("id.sector", "sector")
-
-# Energy emission 
-resultCombFertEmission <- scenario1CombSeriesOfImpactFertilizer[[1]][[2]]
-resultCombFertEmission$year <- initialYear
-resultCombFertEmission <- resultCombFertEmission[, c("year", names(scenario1CombSeriesOfImpactFertilizer[[1]][[2]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario1CombSeriesOfImpactFertilizer[[t+1]][[2]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombFertEmission)]
-  resultCombFertEmission <- data.frame(rbind(resultCombFertEmission, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombFertEmission)[2:3] <- c("id.sector", "sector")
-
-# Energy cons
-resultCombWasteConsumption <- scenario1CombSeriesOfImpactWaste[[1]][[1]]
-resultCombWasteConsumption$year <- initialYear
-resultCombWasteConsumption <- resultCombWasteConsumption[, c("year", names(scenario1CombSeriesOfImpactWaste[[1]][[1]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario1CombSeriesOfImpactWaste[[t+1]][[1]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombWasteConsumption)]
-  resultCombWasteConsumption <- data.frame(rbind(resultCombWasteConsumption, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombWasteConsumption)[2:3] <- c("id.sector", "sector")
-
-# Energy emission 
-resultCombWasteEmission <- scenario1CombSeriesOfImpactWaste[[1]][[2]]
-resultCombWasteEmission$year <- initialYear
-resultCombWasteEmission <- resultCombWasteEmission[, c("year", names(scenario1CombSeriesOfImpactWaste[[1]][[2]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario1CombSeriesOfImpactWaste[[t+1]][[2]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombWasteEmission)]
-  resultCombWasteEmission <- data.frame(rbind(resultCombWasteEmission, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombWasteEmission)[2:3] <- c("id.sector", "sector")
-
-resultCombTotalEmission <- data.frame(Year=initialYear:finalYear)
-emissionEnergyConsumption <- numeric()
-emissionWasteDisposal <- numeric()
-emissionFertilizer <- numeric()
-for(t in 0:iteration){
-  t_curr <- initialYear + t
-  add_MEcons <- sum(resultEnergyEmission[resultEnergyEmission$year==t_curr, "Temission"])
-  add_MWdisp <- sum(resultCombWasteEmission[resultCombWasteEmission$year==t_curr, "Temission"])
-  add_MF <- sum(resultCombFertEmission[resultCombFertEmission$year==t_curr, "Temission"])
-  emissionEnergyConsumption <- c(emissionEnergyConsumption, add_MEcons)
-  emissionWasteDisposal <- c(emissionWasteDisposal, add_MWdisp)
-  emissionFertilizer <- c(emissionFertilizer, add_MF)
-}
-resultCombTotalEmission$emissionEnergyCons <- emissionEnergyConsumption
-resultCombTotalEmission$emissionWasteDisp <- emissionWasteDisposal
-resultCombTotalEmission$emissionFert <- emissionFertilizer
-resultCombTotalEmission$TotalEmission <- rowSums(resultCombTotalEmission[, 2:ncol(resultCombTotalEmission)])
-resultCombTotalEmission$CummulativeEmission <- cumsum(resultCombTotalEmission$TotalEmission)
-
-# BAU emission[economic sector, years]
-scenarioCombSeriesOfEmissionBySector <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-for(t in 0:iteration){
-  t_curr <- initialYear + t
-  add_MEcons <- resultEnergyEmission[resultEnergyEmission$year==t_curr, "Temission"]
-  add_MWdisp <- resultCombWasteEmission[resultCombWasteEmission$year==t_curr, "Temission"]
-  add_MF <- resultCombFertEmission[resultCombFertEmission$year==t_curr, "Temission"]
-  eval(parse(text=paste0("scenarioCombSeriesOfEmissionBySector$y", t_curr, " <- add_MEcons + add_MWdisp + add_MF")))
-}
-
-resultCombTotalGDP <- colSums(scenario1CombSeriesOfGDP[,3:17])
-scenarioCombResult <- subset(resultCombTotalEmission, select=c(Year, TotalEmission, CummulativeEmission))
-scenarioCombResult <- cbind(scenarioCombResult, resultCombTotalGDP)
-scenarioCombResult$EmissionIntensity <- scenarioCombResult$TotalEmission / scenarioCombResult$resultCombTotalGDP
-
-write.table(scenarioCombSeriesOfEmissionBySector, "limbah_pertanian_emisi.csv", row.names = F, sep=",")
-write.table(scenario1CombSeriesOfGDP, "limbah_pertanian_gdp.csv", row.names = F, sep=",")
-write.table(scenarioCombResult, "limbah_pertanian_scen.csv", row.names = F, sep=",")
-
-###END: waste-fertilizer####
-
-
-
-
-
-###BEGIN: Scenario energy-waste-fertilizer simulation####
-scenario2CombFD <- read.table("D:/My_Development/RProjects/lcd-scenario/_AN/fd_limbah_pertanian_energi.csv", header = T, sep = ",")
-ef_fert <- read.table("D:/My_Development/RProjects/lcd-scenario/_AN/EF_Scen2.csv", header = T, sep = ",")
-scenario2CombFD <- scenario2CombFD[,2:16] 
-colnames(scenario2CombFD) <- as.character(listYear[2:16])
-scenario2CombSeriesOfOutput <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-scenario2CombSeriesOfGDP <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-proportionGDP <- bauSeriesOfGDP$y2015 / ioTotalOutput
-
-# 1. calculate new output and satellite based on intervention on final demand
-scenario2CombSeriesOfImpactWaste <- list()
-scenario2CombSeriesOfImpactEnergy <- list()
-scenario2CombSeriesOfImpactFertilizer <- list()
-for(i in 0:iteration){
-  t_curr <- initialYear + i
-  eval(parse(text=paste0("scenarioFD <- scenario2CombFD$y", t_curr))) 
-  
-  scenarioOutput <- ioLeontiefInverse %*% scenarioFD
-  scenario2CombSeriesOfOutput <- cbind(scenario2CombSeriesOfOutput, scenarioOutput)
-  
-  scenarioGDP <- scenarioOutput * proportionGDP
-  scenario2CombSeriesOfGDP <- cbind(scenario2CombSeriesOfGDP, scenarioGDP)
-  
-  eval(parse(text= paste0("scenario2CombSeriesOfImpactWaste$y", t_curr, " <- functionSatelliteImpact('waste', satellite = satelliteWaste, matrix_output = as.matrix(scenarioOutput), emission_factor = emissionFactorWaste)")))
-  eval(parse(text= paste0("scenario2CombSeriesOfImpactEnergy$y", t_curr, " <- functionSatelliteImpact('energy', satellite = satelliteEnergy, matrix_output = as.matrix(scenarioOutput), emission_factor = emissionFactorEnergy)")))
-  eval(parse(text= paste0("scenario2CombSeriesOfImpactFertilizer$y", t_curr, " <- functionSatelliteImpact('agriculture', satellite = satelliteAgriculture, matrix_output = as.matrix(scenarioOutput), emission_factor = ef_fert)")))
-}
-colnames(scenario2CombSeriesOfOutput)[3:17] <- as.character(listYear[2:16])
-colnames(scenario2CombSeriesOfGDP)[3:17] <- as.character(listYear[2:16])
-
-# 2. next do intervention on satellite
-for(t in 2016:2030){
-  eval(parse(text= paste0("intervensi <- read.table('D:/My_Development/RProjects/lcd-scenario/_YK/raw/input_limbah/intervensi", t, ".csv', header = T, sep = ';')")))
-  scenarioConsumption <- scenario2CombSeriesOfImpactWaste[[paste0("y", t)]][["consumption"]]
-  scenario2CombSeriesOfImpactWaste[[paste0("y", t)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * intervensi[,3:18]
-}
-
-inter_fert <- read.table("D:/My_Development/RProjects/lcd-scenario/_AN/fert_scen.csv", header = T, sep = ",")
-for(u in 2016:2030){
-  scenarioConsumption <- scenario2CombSeriesOfImpactFertilizer[[paste0("y", u)]][["consumption"]]
-  scenario2CombSeriesOfImpactFertilizer[[paste0("y", u)]][["consumption"]][4:ncol(scenarioConsumption)] <-  scenarioConsumption[4:ncol(scenarioConsumption)] * inter_fert
-}
-
-# Energy cons
-resultCombFertConsumption <- scenario2CombSeriesOfImpactFertilizer[[1]][[1]]
-resultCombFertConsumption$year <- initialYear
-resultCombFertConsumption <- resultCombFertConsumption[, c("year", names(scenario2CombSeriesOfImpactFertilizer[[1]][[1]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario2CombSeriesOfImpactFertilizer[[t+1]][[1]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombFertConsumption)]
-  resultCombFertConsumption <- data.frame(rbind(resultCombFertConsumption, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombFertConsumption)[2:3] <- c("id.sector", "sector")
-
-# Energy emission 
-resultCombFertEmission <- scenario2CombSeriesOfImpactFertilizer[[1]][[2]]
-resultCombFertEmission$year <- initialYear
-resultCombFertEmission <- resultCombFertEmission[, c("year", names(scenario2CombSeriesOfImpactFertilizer[[1]][[2]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario2CombSeriesOfImpactFertilizer[[t+1]][[2]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombFertEmission)]
-  resultCombFertEmission <- data.frame(rbind(resultCombFertEmission, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombFertEmission)[2:3] <- c("id.sector", "sector")
-
-# Energy cons
-resultCombWasteConsumption <- scenario2CombSeriesOfImpactWaste[[1]][[1]]
-resultCombWasteConsumption$year <- initialYear
-resultCombWasteConsumption <- resultCombWasteConsumption[, c("year", names(scenario2CombSeriesOfImpactWaste[[1]][[1]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario2CombSeriesOfImpactWaste[[t+1]][[1]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombWasteConsumption)]
-  resultCombWasteConsumption <- data.frame(rbind(resultCombWasteConsumption, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombWasteConsumption)[2:3] <- c("id.sector", "sector")
-
-# Energy emission 
-resultCombWasteEmission <- scenario2CombSeriesOfImpactWaste[[1]][[2]]
-resultCombWasteEmission$year <- initialYear
-resultCombWasteEmission <- resultCombWasteEmission[, c("year", names(scenario2CombSeriesOfImpactWaste[[1]][[2]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario2CombSeriesOfImpactWaste[[t+1]][[2]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombWasteEmission)]
-  resultCombWasteEmission <- data.frame(rbind(resultCombWasteEmission, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombWasteEmission)[2:3] <- c("id.sector", "sector")
-
-# Energy cons
-resultCombEnergyConsumption <- scenario2CombSeriesOfImpactEnergy[[1]][[1]]
-resultCombEnergyConsumption$year <- initialYear
-resultCombEnergyConsumption <- resultCombEnergyConsumption[, c("year", names(scenario2CombSeriesOfImpactEnergy[[1]][[1]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario2CombSeriesOfImpactEnergy[[t+1]][[1]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombEnergyConsumption)]
-  resultCombEnergyConsumption <- data.frame(rbind(resultCombEnergyConsumption, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombEnergyConsumption)[2:3] <- c("id.sector", "sector")
-
-# Energy emission 
-resultCombEnergyEmission <- scenario2CombSeriesOfImpactEnergy[[1]][[2]]
-resultCombEnergyEmission$year <- initialYear
-resultCombEnergyEmission <- resultCombEnergyEmission[, c("year", names(scenario2CombSeriesOfImpactEnergy[[1]][[2]]))]
-for(t in 1:iteration){
-  t_curr <- initialYear + t
-  add.row <- data.frame(scenario2CombSeriesOfImpactEnergy[[t+1]][[2]]) # [[2]] for emission
-  add.row$year <- t_curr
-  add.row <- add.row[, names(resultCombEnergyEmission)]
-  resultCombEnergyEmission <- data.frame(rbind(resultCombEnergyEmission, add.row), stringsAsFactors = FALSE)
-}
-names(resultCombEnergyEmission)[2:3] <- c("id.sector", "sector")
-
-
-resultCombTotalEmission <- data.frame(Year=initialYear:finalYear)
-emissionEnergyConsumption <- numeric()
-emissionWasteDisposal <- numeric()
-emissionFertilizer <- numeric()
-for(t in 0:iteration){
-  t_curr <- initialYear + t
-  add_MEcons <- sum(resultCombEnergyEmission[resultCombEnergyEmission$year==t_curr, "Temission"])
-  add_MWdisp <- sum(resultCombWasteEmission[resultCombWasteEmission$year==t_curr, "Temission"])
-  add_MF <- sum(resultCombFertEmission[resultCombFertEmission$year==t_curr, "Temission"])
-  emissionEnergyConsumption <- c(emissionEnergyConsumption, add_MEcons)
-  emissionWasteDisposal <- c(emissionWasteDisposal, add_MWdisp)
-  emissionFertilizer <- c(emissionFertilizer, add_MF)
-}
-resultCombTotalEmission$emissionEnergyCons <- emissionEnergyConsumption
-resultCombTotalEmission$emissionWasteDisp <- emissionWasteDisposal
-resultCombTotalEmission$emissionFert <- emissionFertilizer
-resultCombTotalEmission$TotalEmission <- rowSums(resultCombTotalEmission[, 2:ncol(resultCombTotalEmission)])
-resultCombTotalEmission$CummulativeEmission <- cumsum(resultCombTotalEmission$TotalEmission)
-
-# BAU emission[economic sector, years]
-scenarioCombSeriesOfEmissionBySector <- data.frame(Sektor=ioSector[,1], Kategori=ioSector[,2])
-for(t in 0:iteration){
-  t_curr <- initialYear + t
-  add_MEcons <- resultCombEnergyEmission[resultCombEnergyEmission$year==t_curr, "Temission"]
-  add_MWdisp <- resultCombWasteEmission[resultCombWasteEmission$year==t_curr, "Temission"]
-  add_MF <- resultCombFertEmission[resultCombFertEmission$year==t_curr, "Temission"]
-  eval(parse(text=paste0("scenarioCombSeriesOfEmissionBySector$y", t_curr, " <- add_MEcons + add_MWdisp + add_MF")))
-}
-
-resultCombTotalGDP <- colSums(scenario2CombSeriesOfGDP[,3:17])
-scenarioCombResult <- subset(resultCombTotalEmission, select=c(Year, TotalEmission, CummulativeEmission))
-scenarioCombResult <- cbind(scenarioCombResult, resultCombTotalGDP)
-scenarioCombResult$EmissionIntensity <- scenarioCombResult$TotalEmission / scenarioCombResult$resultCombTotalGDP
-
-write.table(scenarioCombSeriesOfEmissionBySector, "limbah_pertanian_energi_emisi.csv", row.names = F, sep=",")
-write.table(scenario2CombSeriesOfGDP, "limbah_pertanian_energi_gdp.csv", row.names = F, sep=",")
-write.table(scenarioCombResult, "limbah_pertanian_energi_scen.csv", row.names = F, sep=",")
-
-###END: waste-fertilizer####
-
-
 
