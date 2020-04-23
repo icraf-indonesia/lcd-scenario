@@ -1,0 +1,17 @@
+"","F_Type","Em_F"
+"1","Padat_Ditimbun_di_TPA",0.002289
+"2","Padat_Ditimbun_Lubang",0.001827
+"3","Padat_Kompos",9.33e-11
+"4","Padat_3R",0
+"5","Padat_ins_sampah_domestik",7.3487e-05
+"6","Padat_ins_sampah_industri",3.5977e-05
+"7","Padat_dibakar_terbuka",0.000428126
+"8","Padat_tidak_terkelola",0.000924
+"9","Cair_septic_tank",0.002089835
+"10","Cair_MCK_plus",0.000732035
+"11","Cair_IPAL_Aerob",0.001546715
+"12","Cair_IPAL_Anaerob",0.002904515
+"13","Cair_tidak_terkelola",0.001003595
+"14","Cair_Biogas",0.000732035
+"15","Cair_Pengolahan_KIMIA",0.000732035
+"16","Cair_3R",0.000732035
